@@ -66,8 +66,7 @@ public class WordsPersisting extends BaseRichBolt {
     public void dropCollection(){
         database.getCollection("stormWords").drop(new SingleResultCallback<Void>() {
             @Override
-            public void onResult(Void aVoid, Throwable throwable) {
-                Logger.logMsg(Level.INFO_INT, "stormWords" + " droped.");
+            public void onResult(Void result, Throwable throwable) {
             }
         });
     }
