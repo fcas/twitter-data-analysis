@@ -35,7 +35,7 @@ public class SparkStreaming {
         initialization();
         authentication(args[0], args[1], args[2], args[3]);
 
-        SparkConf conf = new SparkConf().setMaster("local[*]").setAppName("NetworkWordCount");
+        SparkConf conf = new SparkConf().setMaster("local[*]").setAppName("SparkStreamingAnalysis");
         JavaStreamingContext javaStreamingContext = new JavaStreamingContext(conf, new Duration(1000));
         JavaReceiverInputDStream<Status> twitterDStream = TwitterUtils.createStream(javaStreamingContext, getTrendingTopics());
 
