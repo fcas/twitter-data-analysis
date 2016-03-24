@@ -1,0 +1,5 @@
+# Config file
+config.properties
+
+# Java class files
+*.class
