@@ -7,6 +7,7 @@ import twitter4j.*;
 import twitter4j.auth.AccessToken;
 
 import javax.ws.rs.*;
+import javax.ws.rs.core.Response;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -28,7 +29,6 @@ public class TweetService implements ITweetService {
     private String _consumerKey;
     private String _consumerSecret;
     private List<TweetInfo> _tweetInfoList;
-    private String _username;
 
     public TweetService()
     {
@@ -98,7 +98,7 @@ public class TweetService implements ITweetService {
     @GET
     @Path("/metrics/{username}")
     @Produces("application/json")
-    public void processUserTimeLine(@PathParam("username") String username)
+    public Response processUserTimeLine(@PathParam("username") String username)
     {
         _tweetsDAO = TweetsDAO.getInstance(_dbBaseName + username);
 
@@ -108,7 +108,7 @@ public class TweetService implements ITweetService {
         {
             try
             {
-                User user = _twitter.showUser(_username);
+                User user = _twitter.showUser(username);
                 UserInfo userInfo = new UserInfo(user.getCreatedAt(), user.getScreenName(), String.valueOf(user.getId()),
                         user.getFollowersCount(), user.getStatusesCount(), user.getLocation());
                 ResponseList<Status> userTimeLine = _twitter.getUserTimeline(
@@ -120,10 +120,11 @@ public class TweetService implements ITweetService {
                 }
             } catch (TwitterException e)
             {
-                e.printStackTrace();
+                return Response.status(Response.Status.SERVICE_UNAVAILABLE).build();
             }
-        } while (pageCounter < 17);
+        } while (pageCounter != 17);
         _tweetsDAO.save(_tweetInfoList);
+        return Response.status(Response.Status.OK).build();
     }
 
     private void processTweets(ResponseList<Status> tweets, UserInfo userInfo)
