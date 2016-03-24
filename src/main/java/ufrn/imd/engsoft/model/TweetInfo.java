@@ -1,11 +1,17 @@
-package model;
+package ufrn.imd.engsoft.model;
 
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlRootElement;
+import java.io.Serializable;
 import java.util.Date;
 
 /**
  * Created by Felipe on 3/1/16.
  */
-public class TweetInfo {
+@XmlRootElement(name="TweetInfo")
+@XmlAccessorType(XmlAccessType.FIELD)
+public class TweetInfo implements Serializable {
 
     private String tweetId;
     private UserInfo userInfo;

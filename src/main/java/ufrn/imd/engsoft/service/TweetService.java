@@ -1,16 +1,22 @@
-package service;
+package ufrn.imd.engsoft.service;
 
-import dao.TweetsDAO;
-import model.TweetInfo;
-import model.UserInfo;
+import ufrn.imd.engsoft.dao.TweetsDAO;
+import ufrn.imd.engsoft.model.TweetInfo;
+import ufrn.imd.engsoft.model.UserInfo;
 import twitter4j.*;
 import twitter4j.auth.AccessToken;
+
+import javax.ws.rs.*;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Properties;
 
 /**
  * Created by Felipe on 3/13/16.
  */
+@Path("/smartcity")
 public class TweetService implements ITweetService {
 
     private static final String _dbBaseName = "tweetsInfo_";
@@ -24,16 +30,51 @@ public class TweetService implements ITweetService {
     private List<TweetInfo> _tweetInfoList;
     private String _username;
 
-    public TweetService(String consumerKey, String consumerSecret, String accessToken, String accessTokenSecret, String username)
+    public TweetService()
     {
-        _accessToken = accessToken;
-        _accessTokenSecret = accessTokenSecret;
-        _consumerKey = consumerKey;
-        _consumerSecret = consumerSecret;
-        _username = username;
-        _tweetsDAO = TweetsDAO.getInstance(_dbBaseName + _username);
+        setTwitterKeys();
         _tweetInfoList = new ArrayList<TweetInfo>();
         authentication();
+    }
+
+    private void setTwitterKeys()
+    {
+        Properties prop = new Properties();
+        InputStream input = null;
+
+        try
+        {
+            String filename = "config.properties";
+            input = getClass().getClassLoader().getResourceAsStream(filename);
+            if (input == null) {
+                System.out.println("Sorry, unable to find " + filename);
+                return;
+            }
+
+            prop.load(input);
+
+            _accessToken = prop.getProperty("accessToken");
+            _accessTokenSecret = prop.getProperty("accessTokenSecret");
+            _consumerKey = prop.getProperty("consumerKey");
+            _consumerSecret = prop.getProperty("consumerSecret");
+        }
+        catch (IOException ex)
+        {
+            ex.printStackTrace();
+        }
+        finally
+        {
+            if (input != null)
+            {
+                try
+                {
+                    input.close();
+                } catch (IOException e)
+                {
+                    e.printStackTrace();
+                }
+            }
+        }
     }
 
     private void authentication()
@@ -54,8 +95,13 @@ public class TweetService implements ITweetService {
         }
     }
 
-    public void processUserTimeLine()
+    @GET
+    @Path("/metrics/{username}")
+    @Produces("application/json")
+    public void processUserTimeLine(@PathParam("username") String username)
     {
+        _tweetsDAO = TweetsDAO.getInstance(_dbBaseName + username);
+
         int pageCounter = 1;
         int pageLimit = 200;
         do
@@ -89,5 +135,4 @@ public class TweetService implements ITweetService {
             _tweetInfoList.add(tweetInfo);
         }
     }
-
 }

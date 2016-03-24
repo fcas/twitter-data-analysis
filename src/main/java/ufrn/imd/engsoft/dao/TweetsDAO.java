@@ -1,8 +1,8 @@
-package dao;
+package ufrn.imd.engsoft.dao;
 
 import com.mongodb.DB;
 import com.mongodb.MongoClient;
-import model.TweetInfo;
+import ufrn.imd.engsoft.model.TweetInfo;
 import org.jongo.Jongo;
 
 import java.util.List;
@@ -44,7 +44,6 @@ public class TweetsDAO {
         return _instance;
 
     }
-
 
     public void save(List<TweetInfo> tweetInfoList){
         _jongo.getCollection(_collectionName).save(tweetInfoList);

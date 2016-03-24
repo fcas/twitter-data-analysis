@@ -1,4 +1,4 @@
-package stormAnalysis;
+package ufrn.imd.engsoft.stormAnalysis;
 
 import backtype.storm.task.OutputCollector;
 import backtype.storm.task.TopologyContext;

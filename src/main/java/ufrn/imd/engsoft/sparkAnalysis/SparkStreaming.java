@@ -1,7 +1,6 @@
-package sparkAnalysis;
+package ufrn.imd.engsoft.sparkAnalysis;
 
-import service.ITweetService;
-import service.TweetService;
+import ufrn.imd.engsoft.service.ITweetService;
 
 /**
  * Created by Felipe on 10/19/15.
@@ -10,8 +9,8 @@ public class SparkStreaming {
     private static ITweetService _tweetService;
 
     public static void main(String[] args) {
-        _tweetService = new TweetService(args[0], args[1], args[2], args[3], "Curitiba_PMC");
-        _tweetService.processUserTimeLine();
+        //_tweetService = new TweetService(args[0], args[1], args[2], args[3], "Curitiba_PMC");
+        //_tweetService.processUserTimeLine();
 
         /*
         SparkConf conf = new SparkConf().setMaster("local[*]").setAppName("SparkStreamingAnalysis");

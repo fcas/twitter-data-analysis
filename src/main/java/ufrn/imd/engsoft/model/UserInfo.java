@@ -1,7 +1,4 @@
-package model;
-
-
-import org.jongo.marshall.jackson.oid.MongoObjectId;
+package ufrn.imd.engsoft.model;
 
 import java.util.Date;
 

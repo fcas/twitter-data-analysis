@@ -1,4 +1,4 @@
-package stormAnalysis;
+package ufrn.imd.engsoft.stormAnalysis;
 
 /**
  * Created by Felipe on 10/8/15.
