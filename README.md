@@ -1,2 +1,2 @@
 # twitter-data-analysis
-Webapp service about brazilian smart cities metrics based on twitter
+Web-app service about Brazilian smart cities metrics based on tweets
