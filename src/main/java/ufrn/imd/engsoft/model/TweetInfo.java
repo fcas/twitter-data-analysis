@@ -11,79 +11,96 @@ import java.util.Date;
  */
 @XmlRootElement(name="TweetInfo")
 @XmlAccessorType(XmlAccessType.FIELD)
-public class TweetInfo implements Serializable {
+public class TweetInfo implements Serializable
+{
+    private Long _id;
+    private UserInfo _userInfo;
+    private Date _tweetCreatedAt;
+    private Long _inReplyToStatusId;
+    private Long _inReplyToUserId;
+    private Long _retweets;
+    private Long _favorites;
 
-    private String tweetId;
-    private UserInfo userInfo;
-    private Date tweetCreatedAt;
-    private long inReplyToStatusId;
-    private long inReplyToUserId;
-    private long retweetCount;
-    private long favoriteCount;
+    public TweetInfo() {}
 
-    public TweetInfo(UserInfo userInfo, Date tweetCreatedAt, String tweetId, long inReplyToStatusId, long inReplyToUserId, long retweetCount, long favoriteCount) {
-        this.userInfo = userInfo;
-        this.tweetCreatedAt = tweetCreatedAt;
-        this.tweetId = tweetId;
-        this.inReplyToStatusId = inReplyToStatusId;
-        this.inReplyToUserId = inReplyToUserId;
-        this.retweetCount = retweetCount;
-        this.favoriteCount = favoriteCount;
+    public TweetInfo(UserInfo userInfo, Date tweetCreatedAt, long tweetId, long inReplyToStatusId, long inReplyToUserId, long retweets, long favorites)
+    {
+        _userInfo = userInfo;
+        _tweetCreatedAt = tweetCreatedAt;
+        _id = tweetId;
+        _inReplyToStatusId = inReplyToStatusId;
+        _inReplyToUserId = inReplyToUserId;
+        _retweets = retweets;
+        _favorites = favorites;
     }
 
-    public UserInfo getUserInfo() {
-        return userInfo;
+    public UserInfo getUserInfo()
+    {
+        return _userInfo;
     }
 
-    public void setUserInfo(UserInfo userInfo) {
-        this.userInfo = userInfo;
+    public void setUserInfo(UserInfo userInfo)
+    {
+        _userInfo = userInfo;
     }
 
-    public Date getTweetCreatedAt() {
-        return tweetCreatedAt;
+    public Date getTweetCreatedAt()
+    {
+        return _tweetCreatedAt;
     }
 
-    public void setTweetCreatedAt(Date tweetCreatedAt) {
-        this.tweetCreatedAt = tweetCreatedAt;
+    public void setTweetCreatedAt(Date tweetCreatedAt)
+    {
+        _tweetCreatedAt = tweetCreatedAt;
     }
 
-    public String getTweetId() {
-        return tweetId;
+    public Long getTweetId()
+    {
+        return _id;
     }
 
-    public void setTweetId(String tweetId) {
-        this.tweetId = tweetId;
+    public void setTweetId(long tweetId)
+    {
+        _id = tweetId;
     }
 
-    public long getInReplyToStatusId() {
-        return inReplyToStatusId;
+    public Long getInReplyToStatusId()
+    {
+        return _inReplyToStatusId;
     }
 
-    public void setInReplyToStatusId(long inReplyToStatusId) {
-        this.inReplyToStatusId = inReplyToStatusId;
+    public void setInReplyToStatusId(long inReplyToStatusId)
+    {
+        _inReplyToStatusId = inReplyToStatusId;
     }
 
-    public long getInReplyToUserId() {
-        return inReplyToUserId;
+    public Long getInReplyToUserId()
+    {
+        return _inReplyToUserId;
     }
 
-    public void setInReplyToUserId(long inReplyToUserId) {
-        this.inReplyToUserId = inReplyToUserId;
+    public void setInReplyToUserId(long inReplyToUserId)
+    {
+        _inReplyToUserId = inReplyToUserId;
     }
 
-    public long getRetweetCount() {
-        return retweetCount;
+    public Long getRetweets()
+    {
+        return _retweets;
     }
 
-    public void setRetweetCount(long retweetCount) {
-        this.retweetCount = retweetCount;
+    public void setRetweets(long retweets)
+    {
+        _retweets = retweets;
     }
 
-    public long getFavoriteCount() {
-        return favoriteCount;
+    public Long getFavorites()
+    {
+        return _favorites;
     }
 
-    public void setFavoriteCount(long favoriteCount) {
-        this.favoriteCount = favoriteCount;
+    public void setFavorites(long favorites)
+    {
+        _favorites = favorites;
     }
 }

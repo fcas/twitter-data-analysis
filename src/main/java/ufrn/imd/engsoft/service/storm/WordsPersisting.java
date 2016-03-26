@@ -1,4 +1,4 @@
-package ufrn.imd.engsoft.stormAnalysis;
+package ufrn.imd.engsoft.service.storm;
 
 import backtype.storm.task.OutputCollector;
 import backtype.storm.task.TopologyContext;
@@ -6,7 +6,6 @@ import backtype.storm.topology.OutputFieldsDeclarer;
 import backtype.storm.topology.base.BaseRichBolt;
 import backtype.storm.tuple.Tuple;
 import com.mongodb.MongoClient;
-import com.mongodb.async.SingleResultCallback;
 import com.mongodb.client.MongoDatabase;
 import org.bson.Document;
 
@@ -26,7 +25,7 @@ public class WordsPersisting extends BaseRichBolt {
 
         try{
 //            mongoClient = MongoClients.create();
-            database = mongoClient.getDatabase("tweets-db");
+            database = mongoClient.getDatabase("tweets_db");
         } catch (Exception e){
 
         }

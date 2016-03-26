@@ -1,4 +1,4 @@
-package ufrn.imd.engsoft.stormAnalysis;
+package ufrn.imd.engsoft.service.storm;
 
 import backtype.storm.Config;
 import backtype.storm.LocalCluster;

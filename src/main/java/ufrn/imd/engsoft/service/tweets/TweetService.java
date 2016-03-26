@@ -1,12 +1,14 @@
-package ufrn.imd.engsoft.service;
+package ufrn.imd.engsoft.service.tweets;
 
+import twitter4j.*;
+import twitter4j.auth.AccessToken;
 import ufrn.imd.engsoft.dao.TweetsDAO;
 import ufrn.imd.engsoft.model.TweetInfo;
 import ufrn.imd.engsoft.model.UserInfo;
-import twitter4j.*;
-import twitter4j.auth.AccessToken;
 
-import javax.ws.rs.*;
+import javax.ws.rs.POST;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
 import javax.ws.rs.core.Response;
 import java.io.IOException;
 import java.io.InputStream;
@@ -18,9 +20,9 @@ import java.util.Properties;
  * Created by Felipe on 3/13/16.
  */
 @Path("/smartcity")
-public class TweetService implements ITweetService {
-
-    private static final String _dbBaseName = "tweetsInfo_";
+public class TweetService implements ITweetService
+{
+    private static final String _dbBaseName = "tweets_";
     private static AccessToken _token;
     private static TweetsDAO _tweetsDAO;
     private static Twitter _twitter;
@@ -46,7 +48,8 @@ public class TweetService implements ITweetService {
         {
             String filename = "config.properties";
             input = getClass().getClassLoader().getResourceAsStream(filename);
-            if (input == null) {
+            if (input == null)
+            {
                 System.out.println("Sorry, unable to find " + filename);
                 return;
             }
@@ -95,12 +98,11 @@ public class TweetService implements ITweetService {
         }
     }
 
-    @GET
-    @Path("/metrics/{username}")
-    @Produces("application/json")
+    @POST
+    @Path("/tweets/{username}")
     public Response processUserTimeLine(@PathParam("username") String username)
     {
-        _tweetsDAO = TweetsDAO.getInstance(_dbBaseName + username);
+        _tweetsDAO = TweetsDAO.getInstance(_dbBaseName + username, true);
 
         int pageCounter = 1;
         int pageLimit = 200;
@@ -109,10 +111,10 @@ public class TweetService implements ITweetService {
             try
             {
                 User user = _twitter.showUser(username);
-                UserInfo userInfo = new UserInfo(user.getCreatedAt(), user.getScreenName(), String.valueOf(user.getId()),
+                UserInfo userInfo = new UserInfo(user.getCreatedAt(), user.getScreenName(), user.getId(),
                         user.getFollowersCount(), user.getStatusesCount(), user.getLocation());
                 ResponseList<Status> userTimeLine = _twitter.getUserTimeline(
-                        userInfo.getUserName(), new Paging(pageCounter, pageLimit));
+                        userInfo.get_userName(), new Paging(pageCounter, pageLimit));
                 if (userTimeLine.size() > 0)
                 {
                     processTweets(userTimeLine, userInfo);
@@ -124,6 +126,7 @@ public class TweetService implements ITweetService {
             }
         } while (pageCounter != 17);
         _tweetsDAO.save(_tweetInfoList);
+        _tweetsDAO.closeMongo();
         return Response.status(Response.Status.OK).build();
     }
 
@@ -131,7 +134,7 @@ public class TweetService implements ITweetService {
     {
         for (Status status : tweets)
         {
-            TweetInfo tweetInfo = new TweetInfo(userInfo, status.getCreatedAt(), String.valueOf(status.getId()),
+            TweetInfo tweetInfo = new TweetInfo(userInfo, status.getCreatedAt(), status.getId(),
                     status.getInReplyToStatusId(), status.getInReplyToUserId(), status.getRetweetCount(), status.getFavoriteCount());
             _tweetInfoList.add(tweetInfo);
         }

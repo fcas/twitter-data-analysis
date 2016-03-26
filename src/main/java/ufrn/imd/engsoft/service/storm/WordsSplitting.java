@@ -1,4 +1,4 @@
-package ufrn.imd.engsoft.stormAnalysis;
+package ufrn.imd.engsoft.service.storm;
 
 /**
  * Created by Felipe on 10/8/15.

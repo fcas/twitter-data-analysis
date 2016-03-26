@@ -5,69 +5,82 @@ import java.util.Date;
 /**
  * Created by Felipe on 3/1/16.
  */
-public class UserInfo {
+public class UserInfo
+{
+    private Date _userCreatedAt;
+    private String _userName;
+    private long _id;
+    private long _followersCount;
+    private long _statusesCount;
+    private String _location;
 
-    private Date userCreatedAt;
-    private String userName;
-    private String userId;
-    private long followersCount;
-    private long statusesCount;
-    private String location;
-
-    public UserInfo(Date userCreatedAt, String userName, String userId, long followersCount, long statusesCount, String location) {
-        this.userCreatedAt = userCreatedAt;
-        this.userName = userName;
-        this.userId = userId;
-        this.followersCount = followersCount;
-        this.statusesCount = statusesCount;
-        this.location = location;
+    public UserInfo(Date userCreatedAt, String userName, long id, long followersCount, long statusesCount, String location)
+    {
+        _userCreatedAt = userCreatedAt;
+        _userName = userName;
+        _id = id;
+        _followersCount = followersCount;
+        _statusesCount = statusesCount;
+        _location = location;
     }
 
-    public String getUserName() {
-        return userName;
+    public String get_userName()
+    {
+        return _userName;
     }
 
-    public void setUserName(String userName) {
-        this.userName = userName;
+    public void set_userName(String userName)
+    {
+        _userName = userName;
     }
 
-    public String getUserId() {
-        return userId;
+    public long get_id()
+    {
+        return _id;
     }
 
-    public void setUserId(String userId) {
-        this.userId = userId;
+    public void set_id(long userId)
+    {
+        _id = userId;
     }
 
-    public long getFollowersCount() {
-        return followersCount;
+    public long get_followersCount()
+    {
+        return _followersCount;
     }
 
-    public void setFollowersCount(long followersCount) {
-        this.followersCount = followersCount;
+    public void set_followersCount(long followersCount)
+    {
+        _followersCount = followersCount;
     }
 
-    public long getStatusesCount() {
-        return statusesCount;
+    public long get_statusesCount()
+    {
+        return _statusesCount;
     }
 
-    public void setStatusesCount(long statusesCount) {
-        this.statusesCount = statusesCount;
+    public void set_statusesCount(long statusesCount)
+    {
+        _statusesCount = statusesCount;
     }
 
-    public String getLocation() {
-        return location;
+    public String get_location()
+    {
+        return _location;
     }
 
-    public void setLocation(String location) {
-        this.location = location;
+    public void set_location(String location)
+    {
+        _location = location;
     }
 
-    public Date getUserCreatedAt() {
-        return userCreatedAt;
+    public Date get_userCreatedAt()
+    {
+        return _userCreatedAt;
     }
 
-    public void setUserCreatedAt(Date userCreatedAt) {
-        this.userCreatedAt = userCreatedAt;
+    public void set_userCreatedAt(Date userCreatedAt)
+    {
+        _userCreatedAt = userCreatedAt;
     }
 }

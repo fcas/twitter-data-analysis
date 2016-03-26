@@ -1,4 +1,4 @@
-package ufrn.imd.engsoft.stormAnalysis;
+package ufrn.imd.engsoft.service.storm;
 
 import backtype.storm.topology.BasicOutputCollector;
 import backtype.storm.topology.OutputFieldsDeclarer;
