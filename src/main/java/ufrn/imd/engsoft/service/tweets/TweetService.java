@@ -22,6 +22,7 @@ import java.util.Properties;
 @Path("/smartcity")
 public class TweetService implements ITweetService
 {
+    private static final String _configurationFileName = "config.properties";
     private static final String _dbBaseName = "tweets_";
     private static AccessToken _token;
     private static TweetsDAO _tweetsDAO;
@@ -46,11 +47,10 @@ public class TweetService implements ITweetService
 
         try
         {
-            String filename = "config.properties";
-            input = getClass().getClassLoader().getResourceAsStream(filename);
+            input = getClass().getClassLoader().getResourceAsStream(_configurationFileName);
             if (input == null)
             {
-                System.out.println("Sorry, unable to find " + filename);
+                System.out.println("Sorry, unable to find " + _configurationFileName);
                 return;
             }
 
@@ -106,18 +106,29 @@ public class TweetService implements ITweetService
 
         int pageCounter = 1;
         int pageLimit = 200;
+
+        User user = null;
+        try
+        {
+            user = _twitter.showUser(username);
+        }
+        catch (TwitterException e)
+        {
+            e.printStackTrace();
+        }
+
+        UserInfo userInfo = new UserInfo(user.getCreatedAt(), user.getScreenName(), user.getId(),
+                user.getFollowersCount(), user.getStatusesCount(), user.getLocation());
+
         do
         {
             try
             {
-                User user = _twitter.showUser(username);
-                UserInfo userInfo = new UserInfo(user.getCreatedAt(), user.getScreenName(), user.getId(),
-                        user.getFollowersCount(), user.getStatusesCount(), user.getLocation());
                 ResponseList<Status> userTimeLine = _twitter.getUserTimeline(
-                        userInfo.get_userName(), new Paging(pageCounter, pageLimit));
+                        username, new Paging(pageCounter, pageLimit));
                 if (userTimeLine.size() > 0)
                 {
-                    processTweets(userTimeLine, userInfo);
+                    processTweets(userTimeLine);
                     pageCounter++;
                 }
             } catch (TwitterException e)
@@ -125,16 +136,19 @@ public class TweetService implements ITweetService
                 return Response.status(Response.Status.SERVICE_UNAVAILABLE).build();
             }
         } while (pageCounter != 17);
-        _tweetsDAO.save(_tweetInfoList);
+
+        _tweetsDAO.saveUserInfo(userInfo);
+        _tweetsDAO.saveTweetInfos(_tweetInfoList);
         _tweetsDAO.closeMongo();
+
         return Response.status(Response.Status.OK).build();
     }
 
-    private void processTweets(ResponseList<Status> tweets, UserInfo userInfo)
+    private void processTweets(ResponseList<Status> tweets)
     {
         for (Status status : tweets)
         {
-            TweetInfo tweetInfo = new TweetInfo(userInfo, status.getCreatedAt(), status.getId(),
+            TweetInfo tweetInfo = new TweetInfo(status.getCreatedAt(), status.getId(),
                     status.getInReplyToStatusId(), status.getInReplyToUserId(), status.getRetweetCount(), status.getFavoriteCount());
             _tweetInfoList.add(tweetInfo);
         }

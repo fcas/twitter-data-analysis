@@ -5,6 +5,7 @@ import com.mongodb.MongoClient;
 import org.jongo.Jongo;
 import org.jongo.MongoCursor;
 import ufrn.imd.engsoft.model.TweetInfo;
+import ufrn.imd.engsoft.model.UserInfo;
 
 import java.util.List;
 
@@ -52,7 +53,7 @@ public class TweetsDAO
         return _instance;
     }
 
-    public void save(List<TweetInfo> tweetInfoList)
+    public void saveTweetInfos(List<TweetInfo> tweetInfoList)
     {
         for (TweetInfo tweetInfo : tweetInfoList)
         {
@@ -60,13 +61,25 @@ public class TweetsDAO
         }
     }
 
+    public void saveUserInfo(UserInfo userInfo)
+    {
+        _jongo.getCollection(_collectionName).save(userInfo);
+    }
+
     public MongoCursor<TweetInfo> getOrderedNumericField(String fieldName)
     {
         return _jongo.getCollection(_collectionName).
-                find("{}").
+                find("{_username: {$exists: false}}").
                 projection("{" + fieldName + ": 1, _id : 0}").
                 sort("{" + fieldName + ": 1}").
                 as(TweetInfo.class);
+    }
+
+    public UserInfo getUserInfo()
+    {
+        return _jongo.getCollection(_collectionName).
+                findOne("{_location: {$exists: true}}").
+                as(UserInfo.class);
     }
 
     public void dropCollection()

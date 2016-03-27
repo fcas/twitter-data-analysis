@@ -14,7 +14,6 @@ import java.util.Date;
 public class TweetInfo implements Serializable
 {
     private Long _id;
-    private UserInfo _userInfo;
     private Date _tweetCreatedAt;
     private Long _inReplyToStatusId;
     private Long _inReplyToUserId;
@@ -23,25 +22,14 @@ public class TweetInfo implements Serializable
 
     public TweetInfo() {}
 
-    public TweetInfo(UserInfo userInfo, Date tweetCreatedAt, long tweetId, long inReplyToStatusId, long inReplyToUserId, long retweets, long favorites)
+    public TweetInfo(Date tweetCreatedAt, long tweetId, long inReplyToStatusId, long inReplyToUserId, long retweets, long favorites)
     {
-        _userInfo = userInfo;
         _tweetCreatedAt = tweetCreatedAt;
         _id = tweetId;
         _inReplyToStatusId = inReplyToStatusId;
         _inReplyToUserId = inReplyToUserId;
         _retweets = retweets;
         _favorites = favorites;
-    }
-
-    public UserInfo getUserInfo()
-    {
-        return _userInfo;
-    }
-
-    public void setUserInfo(UserInfo userInfo)
-    {
-        _userInfo = userInfo;
     }
 
     public Date getTweetCreatedAt()

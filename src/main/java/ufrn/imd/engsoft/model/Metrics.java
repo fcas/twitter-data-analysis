@@ -16,6 +16,11 @@ public class Metrics implements Serializable
 
     public Metrics() {}
 
+    public double getMean()
+    {
+        return _mean;
+    }
+
     public void setMean(double average)
     {
         _mean = average;

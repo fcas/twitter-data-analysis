@@ -7,8 +7,11 @@ import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.api.java.function.DoubleFunction;
 import ufrn.imd.engsoft.dao.TweetsDAO;
+import ufrn.imd.engsoft.model.Fields;
 import ufrn.imd.engsoft.model.Metrics;
 import ufrn.imd.engsoft.model.TweetInfo;
+import ufrn.imd.engsoft.model.UserInfo;
+import ufrn.imd.engsoft.service.fusionTables.FusionTablesService;
 
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
@@ -45,6 +48,12 @@ public class SparkService implements ISparkService, Serializable
             JavaRDD<Long> rdd = sparkContext.parallelize(longList);
             setMetrics(rdd, longList, field.name());
         }
+
+        UserInfo userInfo = _tweetsDAO.getUserInfo();
+
+        FusionTablesService fusionTablesService = new FusionTablesService();
+        String federativeUnit = userInfo.getLocation().split("-")[1].trim();
+        fusionTablesService.updateData(_metrics, federativeUnit);
 
         sparkContext.close();
 
@@ -83,7 +92,7 @@ public class SparkService implements ISparkService, Serializable
 
     private void setMetrics(JavaRDD<Long> rdd, List<Long> longList, String fieldName)
     {
-        JavaDoubleRDD favoriteDoubles = rdd.mapToDouble(new DoubleFunction<Long>()
+        JavaDoubleRDD doubleRDD = rdd.mapToDouble(new DoubleFunction<Long>()
         {
             public double call(Long value)
             {
@@ -92,14 +101,14 @@ public class SparkService implements ISparkService, Serializable
         });
 
         Metrics metrics = new Metrics();
-        metrics.setMean(favoriteDoubles.mean());
-        metrics.setMax(favoriteDoubles.max());
-        metrics.setMin(favoriteDoubles.min());
-        metrics.setStandardDeviation(favoriteDoubles.stdev());
-        metrics.setVariance(favoriteDoubles.variance());
+        metrics.setMean(doubleRDD.mean());
+        metrics.setMax(doubleRDD.max());
+        metrics.setMin(doubleRDD.min());
+        metrics.setStandardDeviation(doubleRDD.stdev());
+        metrics.setVariance(doubleRDD.variance());
         metrics.setMedian(getMedian(longList, longList.size()));
 
-        _metrics.put(fieldName,metrics);
+        _metrics.put(fieldName, metrics);
     }
 
     private double getMedian(List<Long> numbersList, int numberOfElements)
@@ -114,6 +123,4 @@ public class SparkService implements ISparkService, Serializable
             return (numbersList.get(position) + numbersList.get(position + 1)) / 2;
         }
     }
-
-    private enum Fields { _favorites, _retweets, _inReplyToStatusId }
 }

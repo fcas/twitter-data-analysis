@@ -1,5 +1,6 @@
 # Config file
 config.properties
+client_secret.json
 
 # Java class files
 *.class

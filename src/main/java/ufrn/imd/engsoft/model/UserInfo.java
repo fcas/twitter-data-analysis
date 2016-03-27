@@ -1,11 +1,12 @@
 package ufrn.imd.engsoft.model;
 
+import java.io.Serializable;
 import java.util.Date;
 
 /**
  * Created by Felipe on 3/1/16.
  */
-public class UserInfo
+public class UserInfo implements Serializable
 {
     private Date _userCreatedAt;
     private String _userName;
@@ -13,6 +14,8 @@ public class UserInfo
     private long _followersCount;
     private long _statusesCount;
     private String _location;
+
+    public UserInfo() {}
 
     public UserInfo(Date userCreatedAt, String userName, long id, long followersCount, long statusesCount, String location)
     {
@@ -24,62 +27,62 @@ public class UserInfo
         _location = location;
     }
 
-    public String get_userName()
+    public String getUsername()
     {
         return _userName;
     }
 
-    public void set_userName(String userName)
+    public void setUsername(String userName)
     {
         _userName = userName;
     }
 
-    public long get_id()
+    public long getId()
     {
         return _id;
     }
 
-    public void set_id(long userId)
+    public void setId(long userId)
     {
         _id = userId;
     }
 
-    public long get_followersCount()
+    public long getFollowersCount()
     {
         return _followersCount;
     }
 
-    public void set_followersCount(long followersCount)
+    public void setFollowersCount(long followersCount)
     {
         _followersCount = followersCount;
     }
 
-    public long get_statusesCount()
+    public long getStatusesCount()
     {
         return _statusesCount;
     }
 
-    public void set_statusesCount(long statusesCount)
+    public void setStatusesCount(long statusesCount)
     {
         _statusesCount = statusesCount;
     }
 
-    public String get_location()
+    public String getLocation()
     {
         return _location;
     }
 
-    public void set_location(String location)
+    public void setLocation(String location)
     {
         _location = location;
     }
 
-    public Date get_userCreatedAt()
+    public Date getUserCreatedAt()
     {
         return _userCreatedAt;
     }
 
-    public void set_userCreatedAt(Date userCreatedAt)
+    public void setUserCreatedAt(Date userCreatedAt)
     {
         _userCreatedAt = userCreatedAt;
     }
