@@ -3,9 +3,13 @@ package ufrn.imd.engsoft.service.spark;
 import com.google.common.collect.Lists;
 import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaDoubleRDD;
+import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.api.java.function.DoubleFunction;
+import org.apache.spark.api.java.function.Function2;
+import org.apache.spark.api.java.function.PairFunction;
+import scala.Tuple2;
 import ufrn.imd.engsoft.dao.TweetsDAO;
 import ufrn.imd.engsoft.model.Fields;
 import ufrn.imd.engsoft.model.Metrics;
@@ -30,7 +34,6 @@ import java.util.List;
 public class SparkService implements ISparkService, Serializable
 {
     private static final String _dbBaseName = "tweets_";
-    private static TweetsDAO _tweetsDAO;
     private Dictionary<String, Metrics> _metrics;
 
     @POST
@@ -40,13 +43,43 @@ public class SparkService implements ISparkService, Serializable
         SparkConf conf = new SparkConf().setMaster("local[*]").setAppName("SparkStreamingAnalysis");
         JavaSparkContext sparkContext = new JavaSparkContext(conf);
 
-        _tweetsDAO = TweetsDAO.getInstance(_dbBaseName + username, false);
+        TweetsDAO _tweetsDAO = TweetsDAO.getInstance(_dbBaseName + username, false);
         _metrics = new Hashtable<String, Metrics>();
 
-        for(Fields field : Fields.values()){
-            List<Long> longList = getLongList(Lists.newArrayList(_tweetsDAO.getOrderedNumericField(field.name()).iterator()));
-            JavaRDD<Long> rdd = sparkContext.parallelize(longList);
-            setMetrics(rdd, longList, field.name());
+        List<String> stringList;
+        List<Long> longList;
+        JavaRDD<Long> longJavaRDD;
+        JavaRDD<String> stringJavaRDD;
+
+        for(Fields field : Fields.values())
+        {
+            if (field != Fields._tweetCreatedAt)
+            {
+                longList = getLongList(Lists.newArrayList(_tweetsDAO.getOrderedNumericField(field.name()).iterator()));
+                longJavaRDD = sparkContext.parallelize(longList);
+            }
+            else
+            {
+                stringList = getStringList(Lists.newArrayList(_tweetsDAO.getOrderedNumericField(field.name()).iterator()));
+                stringJavaRDD = sparkContext.parallelize(stringList);
+                JavaPairRDD<String, Long> result = stringJavaRDD.mapToPair(new PairFunction<String, String, Long>()
+                {
+                    public Tuple2<String, Long> call(String x)
+                    {
+                        return new Tuple2(x, (long) 1);
+                    }
+                }).reduceByKey(new Function2<Long, Long, Long>()
+                        {
+                            public Long call(Long a, Long b)
+                            {
+                                return a + b;
+                            }
+                        });
+                longList = result.values().takeOrdered(stringList.size());
+                longJavaRDD = sparkContext.parallelize(longList);
+            }
+
+            setMetrics(longJavaRDD, longList, field.name());
         }
 
         UserInfo userInfo = _tweetsDAO.getUserInfo();
@@ -85,6 +118,19 @@ public class SparkService implements ISparkService, Serializable
             if (tweetInfo.getFavorites() != null)
             {
                 result.add(tweetInfo.getFavorites());
+            }
+        }
+        return result;
+    }
+
+    private List<String> getStringList(List<TweetInfo> tweetInfoList)
+    {
+        List<String> result = new ArrayList<String>();
+        for (TweetInfo tweetInfo : tweetInfoList)
+        {
+            if (tweetInfo.getTweetCreatedAt() != null)
+            {
+                result.add(tweetInfo.getTweetCreatedAt());
             }
         }
         return result;

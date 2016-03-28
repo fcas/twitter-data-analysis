@@ -30,17 +30,12 @@ import java.util.Properties;
 public class FusionTablesService
 {
     private static final String _configurationFileName = "config.properties";
-    /** Directory to store user credentials. */
-    private final java.io.File _dataStoreDirectory =
-            new java.io.File(System.getProperty("user.home"), ".store/fusion_tables_sample");
     private String _applicationName;
     private String _tableId;
     private FileDataStoreFactory _dataStoreFactory;
     private HttpTransport _httpTransport;
     private JsonFactory _jsonFactory = JacksonFactory.getDefaultInstance();
 
-    private Fusiontables fusiontables;
-    private GoogleClientSecrets _clientSecrets;
     private Credential _credential;
 
     public FusionTablesService()
@@ -48,6 +43,8 @@ public class FusionTablesService
         try
         {
             _httpTransport = GoogleNetHttpTransport.newTrustedTransport();
+            /* Directory to store user credentials. */
+            java.io.File _dataStoreDirectory = new java.io.File(System.getProperty("user.home"), ".store/fusion_tables_sample");
             _dataStoreFactory = new FileDataStoreFactory(_dataStoreDirectory);
             _credential = authorize();
             setConfigurations();
@@ -71,7 +68,7 @@ public class FusionTablesService
         InputStream input = getClass().getClassLoader().getResourceAsStream("client_secret.json");
         InputStreamReader inputStreamReader = new InputStreamReader(input);
 
-        _clientSecrets = GoogleClientSecrets.load(_jsonFactory, inputStreamReader);
+        GoogleClientSecrets _clientSecrets = GoogleClientSecrets.load(_jsonFactory, inputStreamReader);
 
         GoogleAuthorizationCodeFlow flow = new GoogleAuthorizationCodeFlow.Builder(
                 _httpTransport, _jsonFactory, _clientSecrets,
@@ -121,7 +118,7 @@ public class FusionTablesService
 
     public void updateData(Dictionary<String, Metrics> dictionary, String federativeUnit) {
 
-        fusiontables = new Fusiontables.Builder(
+        Fusiontables fusiontables = new Fusiontables.Builder(
                 _httpTransport, _jsonFactory, _credential).setApplicationName(_applicationName).build();
         try
         {

@@ -12,6 +12,9 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.core.Response;
 import java.io.IOException;
 import java.io.InputStream;
+import java.time.LocalDate;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
@@ -24,7 +27,6 @@ public class TweetService implements ITweetService
 {
     private static final String _configurationFileName = "config.properties";
     private static final String _dbBaseName = "tweets_";
-    private static AccessToken _token;
     private static TweetsDAO _tweetsDAO;
     private static Twitter _twitter;
     private String _accessToken;
@@ -86,13 +88,18 @@ public class TweetService implements ITweetService
         System.setProperty("twitter4j.oauth.consumerSecret", _consumerSecret);
         System.setProperty("twitter4j.oauth.accessToken", _accessToken);
         System.setProperty("twitter4j.oauth.accessTokenSecret", _accessTokenSecret);
-        _token = new AccessToken(_accessToken, _accessTokenSecret);
+        AccessToken _token = new AccessToken(_accessToken, _accessTokenSecret);
         _twitter = new TwitterFactory().getInstance();
         try
         {
             _twitter.setOAuthConsumer(_consumerKey, _consumerSecret);
             _twitter.setOAuthAccessToken(_token);
-        } catch (Exception e)
+        }
+        catch (IllegalStateException e)
+        {
+
+        }
+        catch (Exception e)
         {
 
         }
@@ -117,8 +124,12 @@ public class TweetService implements ITweetService
             e.printStackTrace();
         }
 
-        UserInfo userInfo = new UserInfo(user.getCreatedAt(), user.getScreenName(), user.getId(),
-                user.getFollowersCount(), user.getStatusesCount(), user.getLocation());
+        UserInfo userInfo = null;
+        if (user != null)
+        {
+            userInfo = new UserInfo(user.getCreatedAt(), user.getScreenName(), user.getId(),
+                    user.getFollowersCount(), user.getStatusesCount(), user.getLocation());
+        }
 
         do
         {
@@ -137,6 +148,8 @@ public class TweetService implements ITweetService
             }
         } while (pageCounter != 17);
 
+
+
         _tweetsDAO.saveUserInfo(userInfo);
         _tweetsDAO.saveTweetInfos(_tweetInfoList);
         _tweetsDAO.closeMongo();
@@ -144,12 +157,18 @@ public class TweetService implements ITweetService
         return Response.status(Response.Status.OK).build();
     }
 
+    private void searchMentions(String username){
+        /* TO DO */
+    }
+
     private void processTweets(ResponseList<Status> tweets)
     {
         for (Status status : tweets)
         {
-            TweetInfo tweetInfo = new TweetInfo(status.getCreatedAt(), status.getId(),
-                    status.getInReplyToStatusId(), status.getInReplyToUserId(), status.getRetweetCount(), status.getFavoriteCount());
+            LocalDate date = status.getCreatedAt().toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+            date.format(DateTimeFormatter.ofPattern("dd-MM-yyyy"));
+            TweetInfo tweetInfo = new TweetInfo(date.toString(), status.getId(), status.getInReplyToStatusId(),
+                    status.getInReplyToUserId(), status.getRetweetCount(), status.getFavoriteCount());
             _tweetInfoList.add(tweetInfo);
         }
     }

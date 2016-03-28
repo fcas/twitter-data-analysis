@@ -69,7 +69,7 @@ public class TweetsDAO
     public MongoCursor<TweetInfo> getOrderedNumericField(String fieldName)
     {
         return _jongo.getCollection(_collectionName).
-                find("{_username: {$exists: false}}").
+                find("{_userName: {$exists: false}}").
                 projection("{" + fieldName + ": 1, _id : 0}").
                 sort("{" + fieldName + ": 1}").
                 as(TweetInfo.class);
@@ -78,7 +78,7 @@ public class TweetsDAO
     public UserInfo getUserInfo()
     {
         return _jongo.getCollection(_collectionName).
-                findOne("{_location: {$exists: true}}").
+                findOne("{_userName: {$exists: true}}").
                 as(UserInfo.class);
     }
 

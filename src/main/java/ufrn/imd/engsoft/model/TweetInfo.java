@@ -4,7 +4,6 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 import java.io.Serializable;
-import java.util.Date;
 
 /**
  * Created by Felipe on 3/1/16.
@@ -14,7 +13,7 @@ import java.util.Date;
 public class TweetInfo implements Serializable
 {
     private Long _id;
-    private Date _tweetCreatedAt;
+    private String _tweetCreatedAt;
     private Long _inReplyToStatusId;
     private Long _inReplyToUserId;
     private Long _retweets;
@@ -22,7 +21,7 @@ public class TweetInfo implements Serializable
 
     public TweetInfo() {}
 
-    public TweetInfo(Date tweetCreatedAt, long tweetId, long inReplyToStatusId, long inReplyToUserId, long retweets, long favorites)
+    public TweetInfo(String tweetCreatedAt, long tweetId, long inReplyToStatusId, long inReplyToUserId, long retweets, long favorites)
     {
         _tweetCreatedAt = tweetCreatedAt;
         _id = tweetId;
@@ -32,12 +31,12 @@ public class TweetInfo implements Serializable
         _favorites = favorites;
     }
 
-    public Date getTweetCreatedAt()
+    public String getTweetCreatedAt()
     {
         return _tweetCreatedAt;
     }
 
-    public void setTweetCreatedAt(Date tweetCreatedAt)
+    public void setTweetCreatedAt(String tweetCreatedAt)
     {
         _tweetCreatedAt = tweetCreatedAt;
     }
