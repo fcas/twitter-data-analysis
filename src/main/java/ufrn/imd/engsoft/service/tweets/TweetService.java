@@ -23,8 +23,7 @@ import java.util.Properties;
  * Created by Felipe on 3/13/16.
  */
 @Path("/smartcity")
-public class TweetService implements ITweetService
-{
+public class TweetService implements ITweetService {
     private static final String _configurationFileName = "config.properties";
     private static final String _dbBaseName = "tweets_";
     private static TweetsDAO _tweetsDAO;
@@ -35,23 +34,19 @@ public class TweetService implements ITweetService
     private String _consumerSecret;
     private List<TweetInfo> _tweetInfoList;
 
-    public TweetService()
-    {
+    public TweetService() {
         setTwitterKeys();
-        _tweetInfoList = new ArrayList<TweetInfo>();
         authentication();
+        _tweetInfoList = new ArrayList<TweetInfo>();
     }
 
-    private void setTwitterKeys()
-    {
+    private void setTwitterKeys() {
         Properties prop = new Properties();
         InputStream input = null;
 
-        try
-        {
+        try {
             input = getClass().getClassLoader().getResourceAsStream(_configurationFileName);
-            if (input == null)
-            {
+            if (input == null) {
                 System.out.println("Sorry, unable to find " + _configurationFileName);
                 return;
             }
@@ -62,114 +57,129 @@ public class TweetService implements ITweetService
             _accessTokenSecret = prop.getProperty("accessTokenSecret");
             _consumerKey = prop.getProperty("consumerKey");
             _consumerSecret = prop.getProperty("consumerSecret");
-        }
-        catch (IOException ex)
-        {
+        } catch (IOException ex) {
             ex.printStackTrace();
-        }
-        finally
-        {
-            if (input != null)
-            {
-                try
-                {
+        } finally {
+            if (input != null) {
+                try {
                     input.close();
-                } catch (IOException e)
-                {
+                } catch (IOException e) {
                     e.printStackTrace();
                 }
             }
         }
     }
 
-    private void authentication()
-    {
+    private void authentication() {
         System.setProperty("twitter4j.oauth.consumerKey", _consumerKey);
         System.setProperty("twitter4j.oauth.consumerSecret", _consumerSecret);
         System.setProperty("twitter4j.oauth.accessToken", _accessToken);
         System.setProperty("twitter4j.oauth.accessTokenSecret", _accessTokenSecret);
         AccessToken _token = new AccessToken(_accessToken, _accessTokenSecret);
         _twitter = new TwitterFactory().getInstance();
-        try
-        {
+        try {
             _twitter.setOAuthConsumer(_consumerKey, _consumerSecret);
             _twitter.setOAuthAccessToken(_token);
-        }
-        catch (IllegalStateException e)
-        {
+        } catch (IllegalStateException e) {
 
-        }
-        catch (Exception e)
-        {
+        } catch (Exception e) {
 
         }
     }
 
     @POST
     @Path("/tweets/{username}")
-    public Response processUserTimeLine(@PathParam("username") String username)
-    {
+    public Response processUserTimeLine(@PathParam("username") String username) {
         _tweetsDAO = TweetsDAO.getInstance(_dbBaseName + username, true);
 
         int pageCounter = 1;
         int pageLimit = 200;
 
         User user = null;
-        try
-        {
+        try {
             user = _twitter.showUser(username);
-        }
-        catch (TwitterException e)
-        {
+        } catch (TwitterException e) {
             e.printStackTrace();
         }
 
-        UserInfo userInfo = null;
-        if (user != null)
-        {
-            userInfo = new UserInfo(user.getCreatedAt(), user.getScreenName(), user.getId(),
+        if (user != null) {
+            UserInfo userInfo = new UserInfo(user.getCreatedAt(), user.getScreenName(), user.getId(),
                     user.getFollowersCount(), user.getStatusesCount(), user.getLocation());
+            _tweetsDAO.saveUserInfo(userInfo);
         }
 
-        do
-        {
-            try
-            {
+        do {
+            try {
                 ResponseList<Status> userTimeLine = _twitter.getUserTimeline(
                         username, new Paging(pageCounter, pageLimit));
-                if (userTimeLine.size() > 0)
-                {
+                if (userTimeLine.size() > 0) {
                     processTweets(userTimeLine);
                     pageCounter++;
                 }
-            } catch (TwitterException e)
-            {
+            } catch (TwitterException e) {
                 return Response.status(Response.Status.SERVICE_UNAVAILABLE).build();
             }
         } while (pageCounter != 17);
 
-
-
-        _tweetsDAO.saveUserInfo(userInfo);
         _tweetsDAO.saveTweetInfos(_tweetInfoList);
-        _tweetsDAO.closeMongo();
+        searchMentions(username);
 
         return Response.status(Response.Status.OK).build();
     }
 
-    private void searchMentions(String username){
-        /* TO DO */
-    }
-
-    private void processTweets(ResponseList<Status> tweets)
-    {
-        for (Status status : tweets)
-        {
+    private void processTweets(ResponseList<Status> tweets) {
+        for (Status status : tweets) {
             LocalDate date = status.getCreatedAt().toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
             date.format(DateTimeFormatter.ofPattern("dd-MM-yyyy"));
             TweetInfo tweetInfo = new TweetInfo(date.toString(), status.getId(), status.getInReplyToStatusId(),
                     status.getInReplyToUserId(), status.getRetweetCount(), status.getFavoriteCount());
             _tweetInfoList.add(tweetInfo);
         }
+    }
+
+    private void searchMentions(String username) {
+        Query query = new Query("@" + username);
+        long maxId = _tweetsDAO.getMaxId().getTweetId();
+
+        query.setMaxId(maxId);
+        query.setCount(100);
+        Boolean hasNext = true;
+
+        List<TweetInfo> tweets = new ArrayList<TweetInfo>();
+        do
+        {
+            try
+            {
+                QueryResult result = _twitter.search(query);
+                tweets.addAll(mapStatusToTweetInfoList(result.getTweets()));
+                TweetInfo lastTweet = tweets.get(tweets.size() - 1);
+                if (query.getMaxId() != lastTweet.getTweetId() - 1)
+                {
+                    query.setMaxId(lastTweet.getTweetId() - 1);
+                } else
+                {
+                    hasNext = false;
+                }
+            }
+            catch (TwitterException e)
+            {
+                e.printStackTrace();
+            }
+
+        } while (hasNext);
+
+        _tweetsDAO = TweetsDAO.getInstance(_dbBaseName + username + "_mentions", true);
+        _tweetsDAO.saveTweetInfos(tweets);
+        _tweetsDAO.closeMongo();
+    }
+
+    private List<TweetInfo> mapStatusToTweetInfoList(List<Status> statusList) {
+        List<TweetInfo> result = new ArrayList<TweetInfo>();
+        for (Status status : statusList) {
+            LocalDate date = status.getCreatedAt().toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+            result.add(new TweetInfo(date.toString(), status.getId(), status.getInReplyToStatusId(),
+                    status.getInReplyToUserId(), status.getRetweetCount(), status.getFavoriteCount()));
+        }
+        return result;
     }
 }

@@ -16,7 +16,7 @@ public class TweetsDAO
 {
     private static TweetsDAO _instance;
     private static boolean _dropCollection;
-    private String _collectionName;
+    private static String _collectionName;
     private DB _database;
     private Jongo _jongo;
     private MongoClient _mongoClient;
@@ -36,7 +36,7 @@ public class TweetsDAO
 
     private static synchronized void createInstance (String collectionName)
     {
-        if (_instance == null)
+        if (_instance == null || !_collectionName.equals(collectionName))
         {
             _instance = new TweetsDAO(collectionName);
         }
@@ -44,11 +44,10 @@ public class TweetsDAO
 
     public static TweetsDAO getInstance(String collectionName, boolean dropCollection)
     {
-        if(_instance == null)
+        if(_instance == null || !_collectionName.equals(collectionName))
         {
             _dropCollection = dropCollection;
             createInstance (collectionName);
-
         }
         return _instance;
     }
@@ -80,6 +79,13 @@ public class TweetsDAO
         return _jongo.getCollection(_collectionName).
                 findOne("{_userName: {$exists: true}}").
                 as(UserInfo.class);
+    }
+
+    public TweetInfo getMaxId()
+    {
+        return _jongo.getCollection(_collectionName).
+                findOne().orderBy("{_id: -1}").
+                as(TweetInfo.class);
     }
 
     public void dropCollection()
