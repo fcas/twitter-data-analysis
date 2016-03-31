@@ -131,7 +131,7 @@ public class TweetService implements ITweetService {
         for (Status status : tweets) {
             LocalDate date = status.getCreatedAt().toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
             date.format(DateTimeFormatter.ofPattern("dd-MM-yyyy"));
-            TweetInfo tweetInfo = new TweetInfo(date.toString(), status.getId(), status.getInReplyToStatusId(),
+            TweetInfo tweetInfo = new TweetInfo(status.getId(), false, date.toString(), status.getInReplyToStatusId(),
                     status.getInReplyToUserId(), status.getRetweetCount(), status.getFavoriteCount());
             _tweetInfoList.add(tweetInfo);
         }
@@ -168,7 +168,6 @@ public class TweetService implements ITweetService {
 
         } while (hasNext);
 
-        _tweetsDAO = TweetsDAO.getInstance(_dbBaseName + username + "_mentions", true);
         _tweetsDAO.saveTweetInfos(tweets);
         _tweetsDAO.closeMongo();
     }
@@ -177,7 +176,7 @@ public class TweetService implements ITweetService {
         List<TweetInfo> result = new ArrayList<TweetInfo>();
         for (Status status : statusList) {
             LocalDate date = status.getCreatedAt().toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
-            result.add(new TweetInfo(date.toString(), status.getId(), status.getInReplyToStatusId(),
+            result.add(new TweetInfo(status.getId(), true, date.toString(), status.getInReplyToStatusId(),
                     status.getInReplyToUserId(), status.getRetweetCount(), status.getFavoriteCount()));
         }
         return result;

@@ -53,14 +53,15 @@ public class SparkService implements ISparkService, Serializable
 
         for(Fields field : Fields.values())
         {
-            if (field != Fields._tweetCreatedAt)
+            if (field != Fields._tweetCreatedAt && field != Fields._tweetCreatedAt_mention)
             {
-                longList = getLongList(Lists.newArrayList(_tweetsDAO.getOrderedNumericField(field.name()).iterator()));
+                longList = getLongList(Lists.newArrayList(_tweetsDAO.getOrderedNumericField(field.name(), false).iterator()));
                 longJavaRDD = sparkContext.parallelize(longList);
             }
             else
             {
-                stringList = getStringList(Lists.newArrayList(_tweetsDAO.getOrderedNumericField(field.name()).iterator()));
+                boolean isMention = field == Fields._tweetCreatedAt_mention;
+                stringList = getStringList(Lists.newArrayList(_tweetsDAO.getOrderedNumericField(Fields._tweetCreatedAt.name(), isMention).iterator()));
                 stringJavaRDD = sparkContext.parallelize(stringList);
                 JavaPairRDD<String, Long> result = stringJavaRDD.mapToPair(new PairFunction<String, String, Long>()
                 {

@@ -36,7 +36,7 @@ public class TweetsDAO
 
     private static synchronized void createInstance (String collectionName)
     {
-        if (_instance == null || !_collectionName.equals(collectionName))
+        if (_instance == null)
         {
             _instance = new TweetsDAO(collectionName);
         }
@@ -44,7 +44,7 @@ public class TweetsDAO
 
     public static TweetsDAO getInstance(String collectionName, boolean dropCollection)
     {
-        if(_instance == null || !_collectionName.equals(collectionName))
+        if(_instance == null)
         {
             _dropCollection = dropCollection;
             createInstance (collectionName);
@@ -65,10 +65,13 @@ public class TweetsDAO
         _jongo.getCollection(_collectionName).save(userInfo);
     }
 
-    public MongoCursor<TweetInfo> getOrderedNumericField(String fieldName)
+    public MongoCursor<TweetInfo> getOrderedNumericField(String fieldName, boolean isMention)
     {
         return _jongo.getCollection(_collectionName).
-                find("{_userName: {$exists: false}}").
+                find("{$and: [" +
+                             "{_userName: {$exists: false}}, " +
+                             "{_isMention: {$eq:" + isMention + "}}" +
+                             "]}").
                 projection("{" + fieldName + ": 1, _id : 0}").
                 sort("{" + fieldName + ": 1}").
                 as(TweetInfo.class);

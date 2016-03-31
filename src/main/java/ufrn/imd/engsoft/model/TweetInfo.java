@@ -18,17 +18,29 @@ public class TweetInfo implements Serializable
     private Long _inReplyToUserId;
     private Long _retweets;
     private Long _favorites;
+    private boolean _isMention;
 
     public TweetInfo() {}
 
-    public TweetInfo(String tweetCreatedAt, long tweetId, long inReplyToStatusId, long inReplyToUserId, long retweets, long favorites)
+    public TweetInfo(long tweetId, boolean isMention, String tweetCreatedAt,  long inReplyToStatusId, long inReplyToUserId, long retweets, long favorites)
     {
-        _tweetCreatedAt = tweetCreatedAt;
         _id = tweetId;
+        _tweetCreatedAt = tweetCreatedAt;
+        _isMention = isMention;
         _inReplyToStatusId = inReplyToStatusId;
         _inReplyToUserId = inReplyToUserId;
         _retweets = retweets;
         _favorites = favorites;
+    }
+
+    public Long getTweetId()
+    {
+        return _id;
+    }
+
+    public void setTweetId(long tweetId)
+    {
+        _id = tweetId;
     }
 
     public String getTweetCreatedAt()
@@ -41,14 +53,12 @@ public class TweetInfo implements Serializable
         _tweetCreatedAt = tweetCreatedAt;
     }
 
-    public Long getTweetId()
-    {
-        return _id;
+    public boolean is_isMention() {
+        return _isMention;
     }
 
-    public void setTweetId(long tweetId)
-    {
-        _id = tweetId;
+    public void set_isMention(boolean _isMention) {
+        this._isMention = _isMention;
     }
 
     public Long getInReplyToStatusId()
