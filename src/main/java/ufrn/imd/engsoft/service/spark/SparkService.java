@@ -105,7 +105,8 @@ public class SparkService implements ISparkService, Serializable
                 if (inReplyToStatusId == -1)
                 {
                     result.add((long) 0);
-                } else
+                }
+                else
                 {
                     result.add((long) 1);
                 }
@@ -119,6 +120,11 @@ public class SparkService implements ISparkService, Serializable
             if (tweetInfo.getFavorites() != null)
             {
                 result.add(tweetInfo.getFavorites());
+            }
+
+            if (tweetInfo.getResponseTime() != null)
+            {
+                result.add(tweetInfo.getResponseTime());
             }
         }
         return result;

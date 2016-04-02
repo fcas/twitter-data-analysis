@@ -5,5 +5,5 @@ package ufrn.imd.engsoft.model;
  */
 public enum Fields
 {
-    _favorites, _retweets, _inReplyToStatusId, _tweetCreatedAt, _tweetCreatedAt_mention
+    _favorites, _retweets, _inReplyToStatusId, _tweetCreatedAt, _tweetCreatedAt_mention, _responseTime
 }

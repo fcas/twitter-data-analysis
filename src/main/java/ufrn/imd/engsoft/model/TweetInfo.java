@@ -18,17 +18,20 @@ public class TweetInfo implements Serializable
     private Long _inReplyToUserId;
     private Long _retweets;
     private Long _favorites;
+    private Long _responseTime;
     private boolean _isMention;
 
     public TweetInfo() {}
 
-    public TweetInfo(long tweetId, boolean isMention, String tweetCreatedAt,  long inReplyToStatusId, long inReplyToUserId, long retweets, long favorites)
+    public TweetInfo(long tweetId, boolean isMention, String tweetCreatedAt,  long inReplyToStatusId,
+                     long inReplyToUserId, long responseTime, long retweets, long favorites)
     {
         _id = tweetId;
         _tweetCreatedAt = tweetCreatedAt;
         _isMention = isMention;
         _inReplyToStatusId = inReplyToStatusId;
         _inReplyToUserId = inReplyToUserId;
+        _responseTime = responseTime;
         _retweets = retweets;
         _favorites = favorites;
     }
@@ -53,12 +56,13 @@ public class TweetInfo implements Serializable
         _tweetCreatedAt = tweetCreatedAt;
     }
 
-    public boolean is_isMention() {
+    public boolean isMention() {
         return _isMention;
     }
 
-    public void set_isMention(boolean _isMention) {
-        this._isMention = _isMention;
+    public void setIsMention(boolean isMention)
+    {
+        _isMention = isMention;
     }
 
     public Long getInReplyToStatusId()
@@ -79,6 +83,16 @@ public class TweetInfo implements Serializable
     public void setInReplyToUserId(long inReplyToUserId)
     {
         _inReplyToUserId = inReplyToUserId;
+    }
+
+    public Long getResponseTime()
+    {
+        return _responseTime;
+    }
+
+    public void setResponseTime(Long responseTime)
+    {
+        _responseTime = responseTime;
     }
 
     public Long getRetweets()
