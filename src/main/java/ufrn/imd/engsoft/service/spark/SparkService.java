@@ -87,7 +87,7 @@ public class SparkService implements ISparkService, Serializable
 
         FusionTablesService fusionTablesService = new FusionTablesService();
         String federativeUnit = userInfo.getLocation().split("-")[1].trim();
-        fusionTablesService.updateData(_metrics, federativeUnit);
+        fusionTablesService.updateData(_metrics, userInfo, federativeUnit);
 
         sparkContext.close();
 

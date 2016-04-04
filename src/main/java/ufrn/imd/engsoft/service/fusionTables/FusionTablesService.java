@@ -15,11 +15,15 @@ import com.google.api.services.fusiontables.FusiontablesScopes;
 import com.google.api.services.fusiontables.model.Sqlresponse;
 import ufrn.imd.engsoft.model.Fields;
 import ufrn.imd.engsoft.model.Metrics;
+import ufrn.imd.engsoft.model.UserInfo;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.security.GeneralSecurityException;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.temporal.ChronoUnit;
 import java.util.Collections;
 import java.util.Dictionary;
 import java.util.Properties;
@@ -63,8 +67,8 @@ public class FusionTablesService
         }
     }
 
-    private Credential authorize() throws Exception {
-
+    private Credential authorize() throws Exception
+    {
         InputStream input = getClass().getClassLoader().getResourceAsStream("client_secret.json");
         InputStreamReader inputStreamReader = new InputStreamReader(input);
 
@@ -116,8 +120,8 @@ public class FusionTablesService
         }
     }
 
-    public void updateData(Dictionary<String, Metrics> dictionary, String federativeUnit) {
-
+    public void updateData(Dictionary<String, Metrics> dictionary, UserInfo userInfo, String federativeUnit)
+    {
         Fusiontables fusiontables = new Fusiontables.Builder(
                 _httpTransport, _jsonFactory, _credential).setApplicationName(_applicationName).build();
         try
@@ -125,6 +129,16 @@ public class FusionTablesService
             Sqlresponse result = fusiontables.query().sql(
                     "SELECT ROWID FROM " + _tableId + " WHERE UF = '" + federativeUnit + "'").execute();
             String rowId = result.getRows().get(0).get(0).toString();
+
+            LocalDateTime userCreatedAt = userInfo.getUserCreatedAt().toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime();
+
+            fusiontables.query().sql(
+                    "UPDATE " + _tableId + " SET '_followersCount'" + " = " + userInfo.getFollowersCount() + " WHERE ROWID ='" + rowId + "'").execute();
+            fusiontables.query().sql(
+                    "UPDATE " + _tableId + " SET '_statusesCount'" + " = " + userInfo.getStatusesCount() + " WHERE ROWID ='" + rowId + "'").execute();
+            fusiontables.query().sql(
+                    "UPDATE " + _tableId + " SET '_accountAge'" + " = " +
+                            userCreatedAt.until(LocalDateTime.now(), ChronoUnit.YEARS) + " WHERE ROWID ='" + rowId + "'").execute();
 
             for (Fields field : Fields.values())
             {
