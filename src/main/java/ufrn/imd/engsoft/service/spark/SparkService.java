@@ -22,17 +22,19 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.core.Response;
 import java.io.Serializable;
+import java.net.URISyntaxException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Dictionary;
 import java.util.Hashtable;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Created by Felipe on 3/25/16.
  */
 @Path("/smartcity")
-public class SparkService implements ISparkService, Serializable
-{
+public class SparkService implements ISparkService, Serializable {
     private static final String _dbBaseName = "tweets_";
     private Dictionary<String, Metrics> _metrics;
 
@@ -44,14 +46,14 @@ public class SparkService implements ISparkService, Serializable
         JavaSparkContext sparkContext = new JavaSparkContext(conf);
 
         TweetsDAO _tweetsDAO = TweetsDAO.getInstance(_dbBaseName + username, false);
-        _metrics = new Hashtable<String, Metrics>();
+        _metrics = new Hashtable<>();
 
         List<String> stringList;
         List<Long> longList;
         JavaRDD<Long> longJavaRDD;
         JavaRDD<String> stringJavaRDD;
 
-        for(Fields field : Fields.values())
+        for (Fields field : Fields.values())
         {
             if (field != Fields._tweetCreatedAt && field != Fields._tweetCreatedAt_mention)
             {
@@ -63,19 +65,9 @@ public class SparkService implements ISparkService, Serializable
                 boolean isMention = field == Fields._tweetCreatedAt_mention;
                 stringList = getStringList(Lists.newArrayList(_tweetsDAO.getOrderedNumericField(Fields._tweetCreatedAt.name(), isMention).iterator()));
                 stringJavaRDD = sparkContext.parallelize(stringList);
-                JavaPairRDD<String, Long> result = stringJavaRDD.mapToPair(new PairFunction<String, String, Long>()
-                {
-                    public Tuple2<String, Long> call(String x)
-                    {
-                        return new Tuple2(x, (long) 1);
-                    }
-                }).reduceByKey(new Function2<Long, Long, Long>()
-                        {
-                            public Long call(Long a, Long b)
-                            {
-                                return a + b;
-                            }
-                        });
+                JavaPairRDD<String, Long> result = stringJavaRDD.mapToPair(
+                        (PairFunction<String, String, Long>) x -> new Tuple2(x, (long) 1)).reduceByKey(
+                        (Function2<Long, Long, Long>) (a, b) -> a + b);
                 longList = result.values().takeOrdered(stringList.size());
                 longJavaRDD = sparkContext.parallelize(longList);
             }
@@ -96,7 +88,7 @@ public class SparkService implements ISparkService, Serializable
 
     private List<Long> getLongList(List<TweetInfo> tweetInfoList)
     {
-        List<Long> result = new ArrayList<Long>();
+        List<Long> result = new ArrayList<>();
         for (TweetInfo tweetInfo : tweetInfoList)
         {
             if (tweetInfo.getInReplyToStatusId() != null)
@@ -132,26 +124,15 @@ public class SparkService implements ISparkService, Serializable
 
     private List<String> getStringList(List<TweetInfo> tweetInfoList)
     {
-        List<String> result = new ArrayList<String>();
-        for (TweetInfo tweetInfo : tweetInfoList)
-        {
-            if (tweetInfo.getTweetCreatedAt() != null)
-            {
-                result.add(tweetInfo.getTweetCreatedAt());
-            }
-        }
-        return result;
+        return tweetInfoList.stream()
+                .filter(tweetInfo -> tweetInfo.getTweetCreatedAt() != null)
+                .map(TweetInfo::getTweetCreatedAt)
+                .collect(Collectors.toList());
     }
 
     private void setMetrics(JavaRDD<Long> rdd, List<Long> longList, String fieldName)
     {
-        JavaDoubleRDD doubleRDD = rdd.mapToDouble(new DoubleFunction<Long>()
-        {
-            public double call(Long value)
-            {
-                return (double) value;
-            }
-        });
+        JavaDoubleRDD doubleRDD = rdd.mapToDouble((DoubleFunction<Long>) value -> (double) value);
 
         Metrics metrics = new Metrics();
         metrics.setMean(doubleRDD.mean());
@@ -176,4 +157,5 @@ public class SparkService implements ISparkService, Serializable
             return (numbersList.get(position) + numbersList.get(position + 1)) / 2;
         }
     }
+
 }

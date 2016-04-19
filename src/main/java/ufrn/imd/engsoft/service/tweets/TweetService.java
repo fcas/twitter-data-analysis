@@ -2,9 +2,11 @@ package ufrn.imd.engsoft.service.tweets;
 
 import twitter4j.*;
 import twitter4j.auth.AccessToken;
+import twitter4j.conf.ConfigurationBuilder;
 import ufrn.imd.engsoft.dao.TweetsDAO;
 import ufrn.imd.engsoft.model.TweetInfo;
 import ufrn.imd.engsoft.model.UserInfo;
+import ufrn.imd.engsoft.service.helpers.TwitterKeysReader;
 
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
@@ -12,7 +14,9 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.core.Response;
 import java.io.IOException;
 import java.io.InputStream;
-import java.time.*;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
@@ -23,86 +27,37 @@ import java.util.*;
 @Path("/smartcity")
 public class TweetService implements ITweetService
 {
-    private static final String _configurationFileName = "config.properties";
     private static final String _dbBaseName = "tweets_";
     private static TweetsDAO _tweetsDAO;
     private static Twitter _twitter;
-    private String _accessToken;
-    private String _accessTokenSecret;
-    private String _consumerKey;
-    private String _consumerSecret;
+    private static AccessToken _token;
     private List<TweetInfo> _tweetInfoList;
     private Map<Long, LocalDateTime> _timeMap;
 
     public TweetService()
     {
-        setTwitterKeys();
         authentication();
-        _tweetInfoList = new ArrayList<TweetInfo>();
-        _timeMap = new HashMap<Long, LocalDateTime>();
-    }
-
-    private void setTwitterKeys()
-    {
-        Properties prop = new Properties();
-        InputStream input = null;
-
-        try
-        {
-            input = getClass().getClassLoader().getResourceAsStream(_configurationFileName);
-            if (input == null)
-            {
-                System.out.println("Sorry, unable to find " + _configurationFileName);
-                return;
-            }
-
-            prop.load(input);
-
-            _accessToken = prop.getProperty("accessToken");
-            _accessTokenSecret = prop.getProperty("accessTokenSecret");
-            _consumerKey = prop.getProperty("consumerKey");
-            _consumerSecret = prop.getProperty("consumerSecret");
-        }
-        catch (IOException ex)
-        {
-            ex.printStackTrace();
-        }
-        finally
-        {
-            if (input != null)
-            {
-                try
-                {
-                    input.close();
-                }
-                catch (IOException e)
-                {
-                    e.printStackTrace();
-                }
-            }
-        }
+        _tweetInfoList = new ArrayList<>();
+        _timeMap = new HashMap<>();
     }
 
     private void authentication()
     {
-        System.setProperty("twitter4j.oauth.consumerKey", _consumerKey);
-        System.setProperty("twitter4j.oauth.consumerSecret", _consumerSecret);
-        System.setProperty("twitter4j.oauth.accessToken", _accessToken);
-        System.setProperty("twitter4j.oauth.accessTokenSecret", _accessTokenSecret);
-        AccessToken _token = new AccessToken(_accessToken, _accessTokenSecret);
+        Properties properties = TwitterKeysReader.getTwitterKeys();
+
+        System.setProperty("twitter4j.oauth.consumerKey", (String) properties.get("consumerKey"));
+        System.setProperty("twitter4j.oauth.consumerSecret", (String) properties.get("consumerSecret"));
+        System.setProperty("twitter4j.oauth.accessToken", (String) properties.get("accessToken"));
+        System.setProperty("twitter4j.oauth.accessTokenSecret", (String) properties.get("accessTokenSecret"));
+        _token = new AccessToken((String) properties.get("accessToken"), (String) properties.get("accessTokenSecret"));
         _twitter = new TwitterFactory().getInstance();
         try
         {
-            _twitter.setOAuthConsumer(_consumerKey, _consumerSecret);
+            _twitter.setOAuthConsumer((String) properties.get("consumerKey"), (String) properties.get("consumerSecret"));
             _twitter.setOAuthAccessToken(_token);
         }
-        catch (IllegalStateException e)
+        catch (Exception ignored)
         {
-
-        }
-        catch (Exception e)
-        {
-
         }
     }
 
@@ -160,7 +115,7 @@ public class TweetService implements ITweetService
     {
         int idCounter = 0;
         long [] statusesId =  new long[100];
-        Set<Long> repliedStatusIds = new HashSet<Long>();
+        Set<Long> repliedStatusIds = new HashSet<>();
 
         for (Status status : tweets)
         {
@@ -205,7 +160,7 @@ public class TweetService implements ITweetService
         query.setCount(100);
         Boolean hasNext = true;
 
-        List<TweetInfo> tweets = new ArrayList<TweetInfo>();
+        List<TweetInfo> tweets = new ArrayList<>();
         do
         {
             try
@@ -239,18 +194,17 @@ public class TweetService implements ITweetService
             ResponseList<Status> responseList = _twitter.lookup(statusesId);
             for (Status status : responseList)
             {
-                for (TweetInfo tweetInfo : _tweetInfoList)
+                _tweetInfoList.stream().filter(tweetInfo ->
+                        tweetInfo.getInReplyToStatusId() == status.getId())
+                        .forEach(tweetInfo ->
                 {
-                    if (tweetInfo.getInReplyToStatusId() == status.getId())
-                    {
-                        LocalDateTime fromLocalDateTime = status.getCreatedAt().
-                                toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime();
-                        LocalDateTime toLocalDateTime = _timeMap.get(tweetInfo.getTweetId());
-                        _timeMap.remove(tweetInfo.getTweetId());
-                        long minutes = fromLocalDateTime.until(toLocalDateTime, ChronoUnit.MINUTES);
-                        tweetInfo.setResponseTime(minutes);
-                    }
-                }
+                    LocalDateTime fromLocalDateTime = status.getCreatedAt().
+                            toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime();
+                    LocalDateTime toLocalDateTime = _timeMap.get(tweetInfo.getTweetId());
+                    _timeMap.remove(tweetInfo.getTweetId());
+                    long minutes = fromLocalDateTime.until(toLocalDateTime, ChronoUnit.MINUTES);
+                    tweetInfo.setResponseTime(minutes);
+                });
             }
         }
         catch (TwitterException e)
@@ -261,7 +215,7 @@ public class TweetService implements ITweetService
 
     private List<TweetInfo> mapStatusToTweetInfoList(List<Status> statusList)
     {
-        List<TweetInfo> result = new ArrayList<TweetInfo>();
+        List<TweetInfo> result = new ArrayList<>();
         for (Status status : statusList)
         {
             LocalDate date = status.getCreatedAt().toInstant().atZone(ZoneId.systemDefault()).toLocalDate();

@@ -2,9 +2,11 @@ package ufrn.imd.engsoft.dao;
 
 import com.mongodb.DB;
 import com.mongodb.MongoClient;
+import org.bson.Document;
 import org.jongo.Jongo;
 import org.jongo.MongoCursor;
 import ufrn.imd.engsoft.model.TweetInfo;
+import ufrn.imd.engsoft.model.TweetStream;
 import ufrn.imd.engsoft.model.UserInfo;
 
 import java.util.List;
@@ -58,6 +60,11 @@ public class TweetsDAO
         {
             _jongo.getCollection(_collectionName).save(tweetInfo);
         }
+    }
+
+    public void saveTweetStreams(Document tweetStream)
+    {
+        _jongo.getCollection(_collectionName).insert(tweetStream);
     }
 
     public void saveUserInfo(UserInfo userInfo)

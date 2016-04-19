@@ -13,7 +13,7 @@
         <java.version>1.8</java.version>
         <mongodriver.version>3.2.2</mongodriver.version>
         <jongo.version>1.2</jongo.version>
-        <storm.version>0.9.1-incubating</storm.version>
+        <storm.version>0.10.0</storm.version>
         <spark.version>1.5.1</spark.version>
         <twiteer4j.version>4.0.4</twiteer4j.version>
         <log4j.version>2.4.1</log4j.version>
@@ -24,6 +24,7 @@
         <junit.version>4.11</junit.version>
         <surefire.version>2.10</surefire.version>
         <tomcat7.version>2.0</tomcat7.version>
+        <opennlp.version>1.6.0</opennlp.version>
         <compiler.srcversion>1.6</compiler.srcversion>
         <compiler.tgtversion>1.6</compiler.tgtversion>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -63,6 +64,13 @@
                     <artifactId>slf4j-api</artifactId>
                 </exclusion>
             </exclusions>
+        </dependency>
+
+        <!-- OpenNlp -->
+        <dependency>
+           <groupId>org.apache.opennlp</groupId>
+            <artifactId>opennlp-tools</artifactId>
+            <version>${opennlp.version}</version>
         </dependency>
 
         <!-- MongoDB -->
@@ -186,6 +194,13 @@
             <version>1.21.0</version>
         </dependency>
 
+        <!-- Google Fusion Tables API -->
+        <dependency>
+            <groupId>com.twitter</groupId>
+            <artifactId>hbc-core</artifactId> <!-- or hbc-twitter4j -->
+            <version>2.2.0</version> <!-- or whatever the latest version is -->
+        </dependency>
+
     </dependencies>
 
     <build>
@@ -258,5 +273,15 @@
                 </plugin>
             </plugins>
         </pluginManagement>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <configuration>
+                    <source>1.8</source>
+                    <target>1.8</target>
+                </configuration>
+            </plugin>
+        </plugins>
     </build>
 </project>

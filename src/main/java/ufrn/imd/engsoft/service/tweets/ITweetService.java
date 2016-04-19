@@ -1,5 +1,8 @@
 package ufrn.imd.engsoft.service.tweets;
 
+import twitter4j.Twitter;
+import twitter4j.TwitterStream;
+
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
