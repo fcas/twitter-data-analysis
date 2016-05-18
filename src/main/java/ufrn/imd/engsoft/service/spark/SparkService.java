@@ -16,19 +16,17 @@ import ufrn.imd.engsoft.model.Metrics;
 import ufrn.imd.engsoft.model.TweetInfo;
 import ufrn.imd.engsoft.model.UserInfo;
 import ufrn.imd.engsoft.service.fusionTables.FusionTablesService;
+import ufrn.imd.engsoft.service.helpers.CitiesReader;
 
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.core.Response;
 import java.io.Serializable;
-import java.net.URISyntaxException;
-import java.net.URL;
-import java.util.ArrayList;
-import java.util.Dictionary;
-import java.util.Hashtable;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
+import java.util.List;
+import java.util.ArrayList;
 
 /**
  * Created by Felipe on 3/25/16.
@@ -39,8 +37,21 @@ public class SparkService implements ISparkService, Serializable {
     private Dictionary<String, Metrics> _metrics;
 
     @POST
-    @Path("/metrics/{username}")
-    public Response processMetrics(@PathParam("username") String username)
+    @Path("/metrics")
+    public Response processMetrics()
+    {
+        Iterator it = CitiesReader.getCities().entrySet().iterator();
+        while (it.hasNext())
+        {
+            Map.Entry pair = (Map.Entry)it.next();
+            getMetrics(pair.getValue().toString(), pair.getKey().toString());
+            it.remove(); // avoids a ConcurrentModificationException
+        }
+
+        return Response.status(Response.Status.OK).build();
+    }
+
+    private void getMetrics(String username, String federativeUnit)
     {
         SparkConf conf = new SparkConf().setMaster("local[*]").setAppName("SparkStreamingAnalysis");
         JavaSparkContext sparkContext = new JavaSparkContext(conf);
@@ -78,12 +89,8 @@ public class SparkService implements ISparkService, Serializable {
         UserInfo userInfo = _tweetsDAO.getUserInfo();
 
         FusionTablesService fusionTablesService = new FusionTablesService();
-        String federativeUnit = userInfo.getLocation().split("-")[1].trim();
         fusionTablesService.updateData(_metrics, userInfo, federativeUnit);
-
         sparkContext.close();
-
-        return Response.status(Response.Status.OK).build();
     }
 
     private List<Long> getLongList(List<TweetInfo> tweetInfoList)
@@ -132,15 +139,18 @@ public class SparkService implements ISparkService, Serializable {
 
     private void setMetrics(JavaRDD<Long> rdd, List<Long> longList, String fieldName)
     {
-        JavaDoubleRDD doubleRDD = rdd.mapToDouble((DoubleFunction<Long>) value -> (double) value);
-
         Metrics metrics = new Metrics();
-        metrics.setMean(doubleRDD.mean());
-        metrics.setMax(doubleRDD.max());
-        metrics.setMin(doubleRDD.min());
-        metrics.setStandardDeviation(doubleRDD.stdev());
-        metrics.setVariance(doubleRDD.variance());
-        metrics.setMedian(getMedian(longList, longList.size()));
+
+        if (!rdd.isEmpty())
+        {
+            JavaDoubleRDD doubleRDD = rdd.mapToDouble((DoubleFunction<Long>) value -> (double) value);
+            metrics.setMean(doubleRDD.mean());
+            metrics.setMax(doubleRDD.max());
+            metrics.setMin(doubleRDD.min());
+            metrics.setStandardDeviation(doubleRDD.stdev());
+            metrics.setVariance(doubleRDD.variance());
+            metrics.setMedian(getMedian(longList, longList.size()));
+        }
 
         _metrics.put(fieldName, metrics);
     }

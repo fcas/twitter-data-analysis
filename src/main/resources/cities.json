@@ -1,0 +1,25 @@
+{
+  "cities":
+  [
+    {"AC":"PrefRioBranco"},
+    {"AL":"PrefMaceio"},
+    {"AP":"PrefMacapa"},
+    {"AM":"PrefManaus"},
+    {"PR":"Curitiba_PMC"},
+    {"SP":"prefsp"},
+    {"MT":"prefeitura_CBA"},
+    {"DF":"Gov_DF"},
+    {"CE":"prefeiturapmf"},
+    {"ES":"VitoriaOnLine"},
+    {"GO":"PrefeituradeGyn"},
+    {"MS":"cgnoticias"},
+    {"RS":"Prefeitura_POA"},
+    {"SC":"scflorianopolis"},
+    {"BA":"agecomsalvador"},
+    {"MA":"PrefeituraSL"},
+    {"MG":"prefeiturabh"},
+    {"PA":"prefeiturabelem"},
+    {"RO":"prefeitura_pvh"},
+    {"SE":"PrefeituAracaju"}
+  ]
+}

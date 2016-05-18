@@ -11,6 +11,6 @@ import javax.ws.rs.core.Response;
 public interface ISparkService
 {
     @POST
-    @Path("/metrics/{username}")
-    Response processMetrics(@PathParam("username") String username);
+    @Path("/metrics")
+    Response processMetrics();
 }

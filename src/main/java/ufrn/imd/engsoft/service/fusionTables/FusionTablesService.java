@@ -39,6 +39,7 @@ public class FusionTablesService
     private FileDataStoreFactory _dataStoreFactory;
     private HttpTransport _httpTransport;
     private JsonFactory _jsonFactory = JacksonFactory.getDefaultInstance();
+    private int _requestCounter;
 
     private Credential _credential;
 
@@ -124,6 +125,8 @@ public class FusionTablesService
     {
         Fusiontables fusiontables = new Fusiontables.Builder(
                 _httpTransport, _jsonFactory, _credential).setApplicationName(_applicationName).build();
+        _requestCounter = 0;
+
         try
         {
             Sqlresponse result = fusiontables.query().sql(
@@ -134,27 +137,42 @@ public class FusionTablesService
 
             fusiontables.query().sql(
                     "UPDATE " + _tableId + " SET '_followersCount'" + " = " + userInfo.getFollowersCount() + " WHERE ROWID ='" + rowId + "'").execute();
+            _requestCounter++;
             fusiontables.query().sql(
                     "UPDATE " + _tableId + " SET '_statusesCount'" + " = " + userInfo.getStatusesCount() + " WHERE ROWID ='" + rowId + "'").execute();
+            _requestCounter++;
             fusiontables.query().sql(
                     "UPDATE " + _tableId + " SET '_accountAge'" + " = " +
                             userCreatedAt.until(LocalDateTime.now(), ChronoUnit.YEARS) + " WHERE ROWID ='" + rowId + "'").execute();
+            _requestCounter++;
 
             for (Fields field : Fields.values())
             {
                 Metrics metrics = dictionary.get(field.name());
+
+                checkRateLimit(_requestCounter);
+
                 fusiontables.query().sql(
-                        "UPDATE " + _tableId + " SET '" + field.name() + "_mean'" + " = " + metrics.getMean() + " WHERE ROWID ='" + rowId + "'").execute();
+                    "UPDATE " + _tableId + " SET '" + field.name() + "_mean'" + " = " + metrics.getMean() + " WHERE ROWID ='" + rowId + "'").execute();
+                _requestCounter++;
                 fusiontables.query().sql(
-                        "UPDATE " + _tableId + " SET '" + field.name() + "_median'" + " = " + metrics.getMedian() + " WHERE ROWID ='" + rowId + "'").execute();
+                    "UPDATE " + _tableId + " SET '" + field.name() + "_median'" + " = " + metrics.getMedian() + " WHERE ROWID ='" + rowId + "'").execute();
+                _requestCounter++;
                 fusiontables.query().sql(
-                        "UPDATE " + _tableId + " SET '" + field.name() + "_min'" + " = " + metrics.getMin() + " WHERE ROWID ='" + rowId + "'").execute();
+                    "UPDATE " + _tableId + " SET '" + field.name() + "_min'" + " = " + metrics.getMin() + " WHERE ROWID ='" + rowId + "'").execute();
+                _requestCounter++;
+
+                checkRateLimit(_requestCounter);
+
                 fusiontables.query().sql(
-                        "UPDATE " + _tableId + " SET '" + field.name() + "_max'" + " = " + metrics.getMax() + " WHERE ROWID ='" + rowId + "'").execute();
+                    "UPDATE " + _tableId + " SET '" + field.name() + "_max'" + " = " + metrics.getMax() + " WHERE ROWID ='" + rowId + "'").execute();
+                _requestCounter++;
                 fusiontables.query().sql(
-                        "UPDATE " + _tableId + " SET '" + field.name() + "_variance'" + " = " + metrics.getVariance() + " WHERE ROWID ='" + rowId + "'").execute();
+                    "UPDATE " + _tableId + " SET '" + field.name() + "_variance'" + " = " + metrics.getVariance() + " WHERE ROWID ='" + rowId + "'").execute();
+                _requestCounter++;
                 fusiontables.query().sql(
-                        "UPDATE " + _tableId + " SET '" + field.name() + "_standard_deviation'" + " = " + metrics.getStandardDeviation() + " WHERE ROWID ='" + rowId + "'").execute();
+                    "UPDATE " + _tableId + " SET '" + field.name() + "_standard_deviation'" + " = " + metrics.getStandardDeviation() + " WHERE ROWID ='" + rowId + "'").execute();
+                _requestCounter++;
             }
         }
         catch (IOException e)
@@ -164,6 +182,22 @@ public class FusionTablesService
         catch (IllegalArgumentException e)
         {
               e.printStackTrace();
+        }
+    }
+
+    private void checkRateLimit(int numberOfRequest)
+    {
+        if (numberOfRequest == 30)
+        {
+            try
+            {
+                Thread.sleep(60000);
+                _requestCounter = 0;
+            }
+            catch (InterruptedException e)
+            {
+                e.printStackTrace();
+            }
         }
     }
 }

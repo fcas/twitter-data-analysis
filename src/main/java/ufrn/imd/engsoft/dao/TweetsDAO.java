@@ -2,11 +2,9 @@ package ufrn.imd.engsoft.dao;
 
 import com.mongodb.DB;
 import com.mongodb.MongoClient;
-import org.bson.Document;
 import org.jongo.Jongo;
 import org.jongo.MongoCursor;
 import ufrn.imd.engsoft.model.TweetInfo;
-import ufrn.imd.engsoft.model.TweetStream;
 import ufrn.imd.engsoft.model.UserInfo;
 
 import java.util.List;
@@ -36,21 +34,10 @@ public class TweetsDAO
         }
     }
 
-    private static synchronized void createInstance (String collectionName)
-    {
-        if (_instance == null)
-        {
-            _instance = new TweetsDAO(collectionName);
-        }
-    }
-
     public static TweetsDAO getInstance(String collectionName, boolean dropCollection)
     {
-        if(_instance == null)
-        {
-            _dropCollection = dropCollection;
-            createInstance (collectionName);
-        }
+        _dropCollection = dropCollection;
+        _instance = new TweetsDAO(collectionName);
         return _instance;
     }
 
@@ -60,11 +47,6 @@ public class TweetsDAO
         {
             _jongo.getCollection(_collectionName).save(tweetInfo);
         }
-    }
-
-    public void saveTweetStreams(Document tweetStream)
-    {
-        _jongo.getCollection(_collectionName).insert(tweetStream);
     }
 
     public void saveUserInfo(UserInfo userInfo)

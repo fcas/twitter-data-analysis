@@ -14,6 +14,6 @@ import javax.ws.rs.core.Response;
 public interface ITweetService
 {
     @POST
-    @Path("/metrics/{username}")
-    Response processUserTimeLine(@PathParam("username") String username);
+    @Path("/tweets")
+    Response processTweets();
 }

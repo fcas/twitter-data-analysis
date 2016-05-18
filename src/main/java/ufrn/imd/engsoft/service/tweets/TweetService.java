@@ -1,11 +1,12 @@
 package ufrn.imd.engsoft.service.tweets;
 
+import com.google.gson.stream.JsonReader;
 import twitter4j.*;
 import twitter4j.auth.AccessToken;
-import twitter4j.conf.ConfigurationBuilder;
 import ufrn.imd.engsoft.dao.TweetsDAO;
 import ufrn.imd.engsoft.model.TweetInfo;
 import ufrn.imd.engsoft.model.UserInfo;
+import ufrn.imd.engsoft.service.helpers.CitiesReader;
 import ufrn.imd.engsoft.service.helpers.TwitterKeysReader;
 
 import javax.ws.rs.POST;
@@ -14,6 +15,7 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.core.Response;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -33,12 +35,16 @@ public class TweetService implements ITweetService
     private static AccessToken _token;
     private List<TweetInfo> _tweetInfoList;
     private Map<Long, LocalDateTime> _timeMap;
+    private int _idCounter;
+    private long [] _statusesId =  new long[100];
+    private Set<Long> _repliedStatusIds = new HashSet<>();
 
     public TweetService()
     {
         authentication();
-        _tweetInfoList = new ArrayList<>();
-        _timeMap = new HashMap<>();
+        _idCounter = 0;
+        _statusesId =  new long[100];
+        _repliedStatusIds = new HashSet<>();
     }
 
     private void authentication()
@@ -62,23 +68,44 @@ public class TweetService implements ITweetService
     }
 
     @POST
-    @Path("/tweets/{username}")
-    public Response processUserTimeLine(@PathParam("username") String username)
+    @Path("/tweets")
+    public Response processTweets()
+    {
+        List<String> cities = new ArrayList<>(CitiesReader.getCities().values());
+
+        for (int i = 0; i < cities.size(); i++)
+        {
+            String city = cities.get(i);
+            try
+            {
+                processUserTimelines(city);
+            }
+            catch (TwitterException e)
+            {
+                return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
+            }
+//            try
+//            {
+//                Thread.sleep(900000);
+//            } catch (InterruptedException e)
+//            {
+//                e.printStackTrace();
+//            }
+        }
+        _tweetsDAO.closeMongo();
+        return Response.status(Response.Status.OK).build();
+    }
+
+    private void processUserTimelines(String username) throws TwitterException
     {
         _tweetsDAO = TweetsDAO.getInstance(_dbBaseName + username, true);
+        _tweetInfoList = new ArrayList<>();
+        _timeMap = new HashMap<>();
 
         int pageCounter = 1;
         int pageLimit = 200;
 
-        User user = null;
-        try
-        {
-            user = _twitter.showUser(username);
-        }
-        catch (TwitterException e)
-        {
-            e.printStackTrace();
-        }
+        User user = _twitter.showUser(username);
 
         if (user != null)
         {
@@ -87,36 +114,41 @@ public class TweetService implements ITweetService
             _tweetsDAO.saveUserInfo(userInfo);
         }
 
+        ResponseList<Status> userTimeLine = null;
+        RateLimitStatus rateLimitStatus = _twitter.getRateLimitStatus().get("/statuses/user_timeline");
+        int remaining = rateLimitStatus.getRemaining();
         do
         {
-            try
+            if (remaining == 0)
             {
-                ResponseList<Status> userTimeLine = _twitter.getUserTimeline(
+                try
+                {
+                    Thread.sleep(rateLimitStatus.getSecondsUntilReset() * 1000);
+                }
+                catch (InterruptedException e)
+                {
+                    e.printStackTrace();
+                }
+            }
+            else
+            {
+                userTimeLine = _twitter.getUserTimeline(
                         username, new Paging(pageCounter, pageLimit));
                 if (userTimeLine.size() > 0)
                 {
-                    processTweets(userTimeLine);
+                    processUserTweets(userTimeLine);
                     pageCounter++;
                 }
             }
-            catch (TwitterException e)
-            {
-                return Response.status(Response.Status.SERVICE_UNAVAILABLE).build();
-            }
-        } while (pageCounter != 17);
+            remaining--;
+        } while (pageCounter != 17 && !userTimeLine.isEmpty() && userTimeLine != null);
 
         _tweetsDAO.saveTweetInfos(_tweetInfoList);
         searchMentions(username);
-
-        return Response.status(Response.Status.OK).build();
     }
 
-    private void processTweets(ResponseList<Status> tweets)
+    private void processUserTweets(ResponseList<Status> tweets)
     {
-        int idCounter = 0;
-        long [] statusesId =  new long[100];
-        Set<Long> repliedStatusIds = new HashSet<>();
-
         for (Status status : tweets)
         {
             LocalDateTime localDateTime = status.getCreatedAt().toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime();
@@ -129,10 +161,10 @@ public class TweetService implements ITweetService
             {
                 _timeMap.put(statusId, localDateTime);
                 // A statusId maybe has more than one reply
-                if (!repliedStatusIds.contains(inReplyToStatusId))
+                if (!_repliedStatusIds.contains(inReplyToStatusId))
                 {
-                    statusesId[idCounter++] = inReplyToStatusId;
-                    repliedStatusIds.add(inReplyToStatusId);
+                    _statusesId[_idCounter++] = inReplyToStatusId;
+                    _repliedStatusIds.add(inReplyToStatusId);
                 }
             }
 
@@ -142,40 +174,60 @@ public class TweetService implements ITweetService
                     status.getInReplyToUserId(), responseTime, status.getRetweetCount(), status.getFavoriteCount());
             _tweetInfoList.add(tweetInfo);
 
-            if (idCounter == 100)
+            if (_idCounter == 100)
             {
-                processResponseTime(statusesId);
-                idCounter = 0;
-                statusesId = new long[100];
+                processResponseTime(_statusesId);
+                _idCounter = 0;
+                _statusesId = new long[100];
             }
         }
     }
 
-    private void searchMentions(String username)
-    {
+    private void searchMentions(String username) throws TwitterException {
         Query query = new Query("@" + username);
         long maxId = _tweetsDAO.getMaxId().getTweetId();
 
         query.setMaxId(maxId);
         query.setCount(100);
-        Boolean hasNext = true;
+        Boolean hasNext = false;
 
         List<TweetInfo> tweets = new ArrayList<>();
+        RateLimitStatus rateLimitStatus = _twitter.getRateLimitStatus().get("/search/tweets");
+        int remaining = rateLimitStatus.getRemaining();
         do
         {
             try
             {
-                QueryResult result = _twitter.search(query);
-                tweets.addAll(mapStatusToTweetInfoList(result.getTweets()));
-                TweetInfo lastTweet = tweets.get(tweets.size() - 1);
-                if (query.getMaxId() != lastTweet.getTweetId() - 1)
+                if(remaining == 0)
                 {
-                    query.setMaxId(lastTweet.getTweetId() - 1);
+                    try
+                    {
+                        Thread.sleep(rateLimitStatus.getSecondsUntilReset() * 1000);
+                    }
+                    catch (InterruptedException e)
+                    {
+                        e.printStackTrace();
+                    }
                 }
                 else
                 {
-                    hasNext = false;
+                    QueryResult result = _twitter.search(query);
+                    if (!result.getTweets().isEmpty())
+                    {
+                        tweets.addAll(mapStatusToTweetInfoList(result.getTweets()));
+                        TweetInfo lastTweet = tweets.get(tweets.size() - 1);
+                        if (query.getMaxId() != lastTweet.getTweetId() - 1)
+                        {
+                            query.setMaxId(lastTweet.getTweetId() - 1);
+                            hasNext = true;
+                        }
+                        else
+                        {
+                            hasNext = false;
+                        }
+                    }
                 }
+                remaining--;
             }
             catch (TwitterException e)
             {
@@ -184,7 +236,6 @@ public class TweetService implements ITweetService
         } while (hasNext);
 
         _tweetsDAO.saveTweetInfos(tweets);
-        _tweetsDAO.closeMongo();
     }
 
     private void processResponseTime(long[] statusesId)

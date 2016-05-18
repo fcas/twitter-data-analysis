@@ -10,16 +10,16 @@ import java.util.Properties;
 public class TwitterKeysReader
 {
     private static final String _configurationFileName = "config.properties";
-    private static InputStream _input = null;
     private static TwitterKeysReader _instance;
 
     private TwitterKeysReader()
     {
-        _input = getClass().getClassLoader().getResourceAsStream(_configurationFileName);
     }
 
     public static Properties getTwitterKeys()
     {
+        InputStream _input = TwitterKeysReader.class.getClassLoader().getResourceAsStream(_configurationFileName);
+
         if (_instance == null)
         {
             _instance = new TwitterKeysReader();
