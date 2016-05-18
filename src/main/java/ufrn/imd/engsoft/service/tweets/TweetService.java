@@ -84,13 +84,6 @@ public class TweetService implements ITweetService
             {
                 return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
             }
-//            try
-//            {
-//                Thread.sleep(900000);
-//            } catch (InterruptedException e)
-//            {
-//                e.printStackTrace();
-//            }
         }
         _tweetsDAO.closeMongo();
         return Response.status(Response.Status.OK).build();
@@ -123,7 +116,7 @@ public class TweetService implements ITweetService
             {
                 try
                 {
-                    Thread.sleep(rateLimitStatus.getSecondsUntilReset() * 1000);
+                    Thread.sleep(900000);
                 }
                 catch (InterruptedException e)
                 {
@@ -202,7 +195,7 @@ public class TweetService implements ITweetService
                 {
                     try
                     {
-                        Thread.sleep(rateLimitStatus.getSecondsUntilReset() * 1000);
+                        Thread.sleep(900000);
                     }
                     catch (InterruptedException e)
                     {
@@ -225,6 +218,10 @@ public class TweetService implements ITweetService
                         {
                             hasNext = false;
                         }
+                    }
+                    else
+                    {
+                        hasNext = false;
                     }
                 }
                 remaining--;
