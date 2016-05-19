@@ -20,6 +20,13 @@
     {"MG":"prefeiturabh"},
     {"PA":"prefeiturabelem"},
     {"RO":"prefeitura_pvh"},
-    {"SE":"PrefeituAracaju"}
+    {"SE":"PrefeituAracaju"},
+    {"TO":"cidadepalmas"},
+    {"PI":"prefeitura_the"},
+    {"RJ":"Prefeitura_Rio"},
+    {"PB":"pmjponline"},
+    {"PE":"prefrecife"},
+    {"RN":"NatalPrefeitura"},
+    {"RR":"PrefeituraBV"}
   ]
 }
