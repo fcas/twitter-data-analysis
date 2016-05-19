@@ -6,6 +6,7 @@ import com.google.api.client.extensions.jetty.auth.oauth2.LocalServerReceiver;
 import com.google.api.client.googleapis.auth.oauth2.GoogleAuthorizationCodeFlow;
 import com.google.api.client.googleapis.auth.oauth2.GoogleClientSecrets;
 import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;
+import com.google.api.client.googleapis.json.GoogleJsonResponseException;
 import com.google.api.client.http.HttpTransport;
 import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.jackson2.JacksonFactory;
@@ -20,13 +21,12 @@ import ufrn.imd.engsoft.model.UserInfo;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.math.BigDecimal;
 import java.security.GeneralSecurityException;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
-import java.util.Collections;
-import java.util.Dictionary;
-import java.util.Properties;
+import java.util.*;
 
 /**
  * Created by Felipe on 3/26/16.
@@ -40,6 +40,7 @@ public class FusionTablesService
     private HttpTransport _httpTransport;
     private JsonFactory _jsonFactory = JacksonFactory.getDefaultInstance();
     private int _requestCounter;
+    private List<String> ok = new ArrayList<>();
 
     private Credential _credential;
 
@@ -135,6 +136,9 @@ public class FusionTablesService
 
             LocalDateTime userCreatedAt = userInfo.getUserCreatedAt().toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime();
 
+            checkRateLimit();
+
+            _requestCounter++;
             fusiontables.query().sql(
                     "UPDATE " + _tableId + " SET '_followersCount'" + " = " + userInfo.getFollowersCount() + " WHERE ROWID ='" + rowId + "'").execute();
             _requestCounter++;
@@ -144,36 +148,45 @@ public class FusionTablesService
             fusiontables.query().sql(
                     "UPDATE " + _tableId + " SET '_accountAge'" + " = " +
                             userCreatedAt.until(LocalDateTime.now(), ChronoUnit.YEARS) + " WHERE ROWID ='" + rowId + "'").execute();
-            _requestCounter++;
 
             for (Fields field : Fields.values())
             {
                 Metrics metrics = dictionary.get(field.name());
 
-                checkRateLimit(_requestCounter);
+                checkRateLimit();
 
+                _requestCounter++;
                 fusiontables.query().sql(
                     "UPDATE " + _tableId + " SET '" + field.name() + "_mean'" + " = " + metrics.getMean() + " WHERE ROWID ='" + rowId + "'").execute();
+
                 _requestCounter++;
                 fusiontables.query().sql(
                     "UPDATE " + _tableId + " SET '" + field.name() + "_median'" + " = " + metrics.getMedian() + " WHERE ROWID ='" + rowId + "'").execute();
+
                 _requestCounter++;
                 fusiontables.query().sql(
                     "UPDATE " + _tableId + " SET '" + field.name() + "_min'" + " = " + metrics.getMin() + " WHERE ROWID ='" + rowId + "'").execute();
+
+                checkRateLimit();
+
                 _requestCounter++;
-
-                checkRateLimit(_requestCounter);
-
                 fusiontables.query().sql(
                     "UPDATE " + _tableId + " SET '" + field.name() + "_max'" + " = " + metrics.getMax() + " WHERE ROWID ='" + rowId + "'").execute();
+
+                BigDecimal variance = new BigDecimal(metrics.getVariance());
+
                 _requestCounter++;
                 fusiontables.query().sql(
-                    "UPDATE " + _tableId + " SET '" + field.name() + "_variance'" + " = " + metrics.getVariance() + " WHERE ROWID ='" + rowId + "'").execute();
+                    "UPDATE " + _tableId + " SET '" + field.name() + "_variance'" + " = " + variance + " WHERE ROWID ='" + rowId + "'").execute();
+
                 _requestCounter++;
                 fusiontables.query().sql(
                     "UPDATE " + _tableId + " SET '" + field.name() + "_standard_deviation'" + " = " + metrics.getStandardDeviation() + " WHERE ROWID ='" + rowId + "'").execute();
-                _requestCounter++;
             }
+        }
+        catch (GoogleJsonResponseException e)
+        {
+            e.printStackTrace();
         }
         catch (IOException e)
         {
@@ -181,13 +194,14 @@ public class FusionTablesService
         }
         catch (IllegalArgumentException e)
         {
-              e.printStackTrace();
+            e.printStackTrace();
         }
+        ok.add(federativeUnit);
     }
 
-    private void checkRateLimit(int numberOfRequest)
+    private void checkRateLimit()
     {
-        if (numberOfRequest == 30)
+        if (_requestCounter == 30)
         {
             try
             {

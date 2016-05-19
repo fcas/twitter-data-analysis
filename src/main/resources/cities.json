@@ -3,10 +3,9 @@
   [
     {"AC":"PrefRioBranco"},
     {"AL":"PrefMaceio"},
-    {"AP":"PMMacapa"},
+    {"AP":"PrefMacapa"},
     {"AM":"PrefManaus"},
     {"PR":"Curitiba_PMC"},
-    {"RN":"NatalPrefeitura"},
     {"SP":"prefsp"},
     {"MT":"prefeitura_CBA"},
     {"DF":"Gov_DF"},
@@ -14,19 +13,20 @@
     {"ES":"VitoriaOnLine"},
     {"GO":"PrefeituradeGyn"},
     {"MS":"cgnoticias"},
-    {"RR":"PrefeituraBV"},
     {"RS":"Prefeitura_POA"},
     {"SC":"scflorianopolis"},
     {"BA":"agecomsalvador"},
     {"MA":"PrefeituraSL"},
     {"MG":"prefeiturabh"},
-    {"PB":"pmjponline"},
     {"PA":"prefeiturabelem"},
-    {"PE":"prefrecife"},
-    {"PI":"prefeitura_the"},
-    {"RJ":"Prefeitura_Rio"},
     {"RO":"prefeitura_pvh"},
     {"SE":"PrefeituAracaju"},
-    {"TO":"cidadepalmas"}
+    {"TO":"cidadepalmas"},
+    {"PI":"prefeitura_the"},
+    {"RJ":"Prefeitura_Rio"},
+    {"PB":"pmjponline"},
+    {"PE":"prefrecife"},
+    {"RN":"NatalPrefeitura"},
+    {"RR":"PrefeituraBV"}
   ]
 }
