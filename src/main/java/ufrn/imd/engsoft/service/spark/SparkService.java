@@ -10,23 +10,22 @@ import org.apache.spark.api.java.function.DoubleFunction;
 import org.apache.spark.api.java.function.Function2;
 import org.apache.spark.api.java.function.PairFunction;
 import scala.Tuple2;
+import ufrn.imd.engsoft.dao.ITweetsDAO;
 import ufrn.imd.engsoft.dao.TweetsDAO;
 import ufrn.imd.engsoft.model.Fields;
 import ufrn.imd.engsoft.model.Metrics;
 import ufrn.imd.engsoft.model.TweetInfo;
 import ufrn.imd.engsoft.model.UserInfo;
 import ufrn.imd.engsoft.service.fusionTables.FusionTablesService;
+import ufrn.imd.engsoft.service.fusionTables.IFusionTablesService;
 import ufrn.imd.engsoft.service.helpers.CitiesReader;
 
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
 import javax.ws.rs.core.Response;
 import java.io.Serializable;
 import java.util.*;
 import java.util.stream.Collectors;
-import java.util.List;
-import java.util.ArrayList;
 
 /**
  * Created by Felipe on 3/25/16.
@@ -35,6 +34,8 @@ import java.util.ArrayList;
 public class SparkService implements ISparkService, Serializable {
     private static final String _dbBaseName = "tweets_";
     private Dictionary<String, Metrics> _metrics;
+    private IFusionTablesService fusionTablesService;
+    private ITweetsDAO _tweetsDAO;
 
     @POST
     @Path("/metrics")
@@ -56,7 +57,7 @@ public class SparkService implements ISparkService, Serializable {
         SparkConf conf = new SparkConf().setMaster("local[*]").setAppName("SparkStreamingAnalysis");
         JavaSparkContext sparkContext = new JavaSparkContext(conf);
 
-        TweetsDAO _tweetsDAO = TweetsDAO.getInstance(_dbBaseName + username, false);
+        _tweetsDAO = TweetsDAO.getInstance(_dbBaseName + username, false);
         _metrics = new Hashtable<>();
 
         List<String> stringList;
@@ -88,7 +89,7 @@ public class SparkService implements ISparkService, Serializable {
 
         UserInfo userInfo = _tweetsDAO.getUserInfo();
 
-        FusionTablesService fusionTablesService = new FusionTablesService();
+        fusionTablesService = new FusionTablesService();
         fusionTablesService.updateData(_metrics, userInfo, federativeUnit);
         sparkContext.close();
     }

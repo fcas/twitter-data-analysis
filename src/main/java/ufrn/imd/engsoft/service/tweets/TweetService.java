@@ -1,8 +1,8 @@
 package ufrn.imd.engsoft.service.tweets;
 
-import com.google.gson.stream.JsonReader;
 import twitter4j.*;
 import twitter4j.auth.AccessToken;
+import ufrn.imd.engsoft.dao.ITweetsDAO;
 import ufrn.imd.engsoft.dao.TweetsDAO;
 import ufrn.imd.engsoft.model.TweetInfo;
 import ufrn.imd.engsoft.model.UserInfo;
@@ -11,11 +11,7 @@ import ufrn.imd.engsoft.service.helpers.TwitterKeysReader;
 
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
 import javax.ws.rs.core.Response;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -30,7 +26,7 @@ import java.util.*;
 public class TweetService implements ITweetService
 {
     private static final String _dbBaseName = "tweets_";
-    private static TweetsDAO _tweetsDAO;
+    private static ITweetsDAO _tweetsDAO;
     private static Twitter _twitter;
     private static AccessToken _token;
     private List<TweetInfo> _tweetInfoList;
@@ -38,6 +34,7 @@ public class TweetService implements ITweetService
     private int _idCounter;
     private long [] _statusesId =  new long[100];
     private Set<Long> _repliedStatusIds = new HashSet<>();
+    private UserInfo _userInfo;
 
     public TweetService()
     {
@@ -102,9 +99,9 @@ public class TweetService implements ITweetService
 
         if (user != null)
         {
-            UserInfo userInfo = new UserInfo(user.getCreatedAt(), user.getScreenName(), user.getId(),
+            _userInfo = new UserInfo(user.getCreatedAt(), user.getScreenName(), user.getId(),
                     user.getFollowersCount(), user.getStatusesCount(), user.getLocation());
-            _tweetsDAO.saveUserInfo(userInfo);
+            _tweetsDAO.saveUserInfo(_userInfo);
         }
 
         ResponseList<Status> userTimeLine = null;

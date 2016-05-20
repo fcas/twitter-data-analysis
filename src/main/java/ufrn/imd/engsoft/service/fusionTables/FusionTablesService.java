@@ -31,7 +31,7 @@ import java.util.*;
 /**
  * Created by Felipe on 3/26/16.
  */
-public class FusionTablesService
+public class FusionTablesService implements  IFusionTablesService
 {
     private static final String _configurationFileName = "config.properties";
     private String _applicationName;

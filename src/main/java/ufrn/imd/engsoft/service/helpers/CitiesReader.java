@@ -13,13 +13,22 @@ import java.util.Map;
  */
 public class CitiesReader
 {
-    public CitiesReader()
+    private static final String _citiesFileName = "cities.json";
+    private static CitiesReader _instance;
+
+    private CitiesReader()
     {
     }
 
     public static Map<String, String> getCities()
     {
-        InputStream input = CitiesReader.class.getClassLoader().getResourceAsStream("cities.json");
+
+        if (_instance == null)
+        {
+            _instance = new CitiesReader();
+        }
+
+        InputStream input = CitiesReader.class.getClassLoader().getResourceAsStream(_citiesFileName);
         InputStreamReader inputStreamReader = new InputStreamReader(input);
         JsonReader reader = new JsonReader(inputStreamReader);
         Map<String, String> cities = new HashMap<>();
@@ -29,7 +38,7 @@ public class CitiesReader
             reader.beginObject();
             reader.nextName();
             reader.beginArray();
-            while(reader.hasNext())
+            while (reader.hasNext())
             {
                 reader.beginObject();
                 cities.put(reader.nextName(), reader.nextString());
