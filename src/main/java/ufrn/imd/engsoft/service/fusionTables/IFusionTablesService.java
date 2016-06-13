@@ -11,4 +11,5 @@ import java.util.Dictionary;
 public interface IFusionTablesService
 {
     void updateData(Dictionary<String, Metrics> dictionary, UserInfo userInfo, String federativeUnit);
+    void updateSentiments(int positiveCount, int negativeCount, int neutralCount, String espTool, String federativeUnit);
 }

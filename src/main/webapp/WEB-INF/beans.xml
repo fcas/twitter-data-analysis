@@ -19,7 +19,7 @@
         <jaxrs:serviceBeans>
             <bean class="ufrn.imd.engsoft.service.tweets.TweetService"/>
             <bean class="ufrn.imd.engsoft.service.spark.SparkService"/>
-            <bean class="ufrn.imd.engsoft.service.storm.StormService"/>
+            <bean class="ufrn.imd.engsoft.service.sentiments.SentimentsService"/>
         </jaxrs:serviceBeans>
         <jaxrs:providers>
             <bean class="org.codehaus.jackson.jaxrs.JacksonJsonProvider"/>

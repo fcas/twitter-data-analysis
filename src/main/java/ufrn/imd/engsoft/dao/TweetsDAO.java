@@ -4,6 +4,7 @@ import com.mongodb.DB;
 import com.mongodb.MongoClient;
 import org.jongo.Jongo;
 import org.jongo.MongoCursor;
+import ufrn.imd.engsoft.model.Sentiment;
 import ufrn.imd.engsoft.model.TweetInfo;
 import ufrn.imd.engsoft.model.UserInfo;
 
@@ -78,6 +79,16 @@ public class TweetsDAO implements ITweetsDAO
         return _jongo.getCollection(_collectionName).
                 findOne().orderBy("{_id: -1}").
                 as(TweetInfo.class);
+    }
+
+    public MongoCursor<Sentiment> getSentiments(String collectionNameSufix, String sentimentPolarity)
+    {
+        return _jongo.getCollection(_collectionName).
+                find("{$and: [" +
+                        "{_userMentions: {$in:['" + collectionNameSufix + "']}}, " +
+                        "{_sentiment: {$eq:'" + sentimentPolarity + "'}}" +
+                        "]}").
+                as(Sentiment.class);
     }
 
     public void dropCollection()

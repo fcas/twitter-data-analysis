@@ -41,12 +41,12 @@ public class SparkService implements ISparkService, Serializable {
     @Path("/metrics")
     public Response processMetrics()
     {
-        Iterator it = CitiesReader.getCities().entrySet().iterator();
-        while (it.hasNext())
+        Iterator iterator = CitiesReader.getCities().entrySet().iterator();
+        while (iterator.hasNext())
         {
-            Map.Entry pair = (Map.Entry)it.next();
+            Map.Entry pair = (Map.Entry)iterator.next();
             getMetrics(pair.getValue().toString(), pair.getKey().toString());
-            it.remove(); // avoids a ConcurrentModificationException
+            iterator.remove(); // avoids a ConcurrentModificationException
         }
 
         return Response.status(Response.Status.OK).build();
@@ -61,8 +61,8 @@ public class SparkService implements ISparkService, Serializable {
         _metrics = new Hashtable<>();
 
         List<String> stringList;
-        List<Long> longList;
-        JavaRDD<Long> longJavaRDD;
+        List<Long> longList = null;
+        JavaRDD<Long> longJavaRDD = null;
         JavaRDD<String> stringJavaRDD;
 
         for (Fields field : Fields.values())

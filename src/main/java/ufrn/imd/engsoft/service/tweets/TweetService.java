@@ -82,13 +82,14 @@ public class TweetService implements ITweetService
                 return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
             }
         }
+        processResponseTime(null);
         _tweetsDAO.closeMongo();
         return Response.status(Response.Status.OK).build();
     }
 
     private void processUserTimelines(String username) throws TwitterException
     {
-        _tweetsDAO = TweetsDAO.getInstance(_dbBaseName + username, true);
+        _tweetsDAO = TweetsDAO.getInstance(_dbBaseName + username, false);
         _tweetInfoList = new ArrayList<>();
         _timeMap = new HashMap<>();
 
@@ -242,14 +243,14 @@ public class TweetService implements ITweetService
                 _tweetInfoList.stream().filter(tweetInfo ->
                         tweetInfo.getInReplyToStatusId() == status.getId())
                         .forEach(tweetInfo ->
-                {
-                    LocalDateTime fromLocalDateTime = status.getCreatedAt().
-                            toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime();
-                    LocalDateTime toLocalDateTime = _timeMap.get(tweetInfo.getTweetId());
-                    _timeMap.remove(tweetInfo.getTweetId());
-                    long minutes = fromLocalDateTime.until(toLocalDateTime, ChronoUnit.MINUTES);
-                    tweetInfo.setResponseTime(minutes);
-                });
+                        {
+                            LocalDateTime fromLocalDateTime = status.getCreatedAt().
+                                    toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime();
+                            LocalDateTime toLocalDateTime = _timeMap.get(tweetInfo.getTweetId());
+                            _timeMap.remove(tweetInfo.getTweetId());
+                            long minutes = fromLocalDateTime.until(toLocalDateTime, ChronoUnit.MINUTES);
+                            tweetInfo.setResponseTime(minutes);
+                        });
             }
         }
         catch (TwitterException e)

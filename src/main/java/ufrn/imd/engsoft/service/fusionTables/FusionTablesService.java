@@ -40,7 +40,6 @@ public class FusionTablesService implements  IFusionTablesService
     private HttpTransport _httpTransport;
     private JsonFactory _jsonFactory = JacksonFactory.getDefaultInstance();
     private int _requestCounter;
-    private List<String> ok = new ArrayList<>();
 
     private Credential _credential;
 
@@ -196,7 +195,38 @@ public class FusionTablesService implements  IFusionTablesService
         {
             e.printStackTrace();
         }
-        ok.add(federativeUnit);
+    }
+
+    public void updateSentiments(int positiveCount, int negativeCount, int neutralCount, String espTool, String federativeUnit)
+    {
+        Fusiontables fusiontables = new Fusiontables.Builder(
+                _httpTransport, _jsonFactory, _credential).setApplicationName(_applicationName).build();
+
+        try
+        {
+            Sqlresponse result = fusiontables.query().sql(
+                    "SELECT ROWID FROM " + _tableId + " WHERE UF = '" + federativeUnit + "'").execute();
+            String rowId = result.getRows().get(0).get(0).toString();
+
+            fusiontables.query().sql(
+                    "UPDATE " + _tableId + " SET '_positiveSentiment_" + espTool + "'" + " = " + positiveCount + " WHERE ROWID ='" + rowId + "'").execute();
+            fusiontables.query().sql(
+                    "UPDATE " + _tableId + " SET '_negativeSentiment_" + espTool + "'" + " = " + negativeCount + " WHERE ROWID ='" + rowId + "'").execute();
+            fusiontables.query().sql(
+                    "UPDATE " + _tableId + " SET '_neutralSentiment_" + espTool + "'" + " = " + neutralCount + " WHERE ROWID ='" + rowId + "'").execute();
+        }
+        catch (GoogleJsonResponseException e)
+        {
+            e.printStackTrace();
+        }
+        catch (IOException e)
+        {
+            e.printStackTrace();
+        }
+        catch (IllegalArgumentException e)
+        {
+            e.printStackTrace();
+        }
     }
 
     private void checkRateLimit()

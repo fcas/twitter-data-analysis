@@ -1,6 +1,7 @@
 package ufrn.imd.engsoft.dao;
 
 import org.jongo.MongoCursor;
+import ufrn.imd.engsoft.model.Sentiment;
 import ufrn.imd.engsoft.model.TweetInfo;
 import ufrn.imd.engsoft.model.UserInfo;
 
@@ -20,6 +21,8 @@ public interface ITweetsDAO
     void closeMongo();
 
     MongoCursor<TweetInfo> getOrderedNumericField(String fieldName, boolean isMention);
+
+    MongoCursor<Sentiment> getSentiments(String collectionNameSufix, String sentimentPolarity);
 
     UserInfo getUserInfo();
 
